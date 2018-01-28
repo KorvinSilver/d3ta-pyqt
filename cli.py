@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Project: d3ta
+Project: D3TA (Dear Diary, Don't Tell Anyone)
 
 Copyright 2018, Korvin F. Ezüst
 
