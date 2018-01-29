@@ -20,6 +20,7 @@ limitations under the License.
 """
 
 import os
+import pathlib
 import shutil
 import tarfile
 import tempfile
@@ -52,39 +53,31 @@ __status__ = "Development"
 
 
 @contextmanager
-def repack_archive(arc, ex_path):
+def manage_archive(arc):
     """
-    Extracts the contents of an LZMA compressed tar archive to a directory,
-    yields, recreates the archive with the contents of the directory and
-    removes directory
+    Extracts the contents of an LZMA compressed tar archive to a temporary
+    directory, yields, recreates the archive with the contents of that
+    directory and removes it
 
     :param arc: an LZMA tar archive
     :type arc: str
-    :param ex_path: extract archive to this directory
-    :type ex_path: str
     """
-    # If dir already exists, remove it
-    if os.path.isdir(ex_path):
-        shutil.rmtree(ex_path)
-    # Create dir
-    os.makedirs(ex_path)
-    try:
-        # Open and extract to dir
-        t = tarfile.open(arc, "r:xz")
-        t.extractall(ex_path)
-        t.close()
-    finally:
-        # Open for writing and yield
-        t = tarfile.open(arc, "w:xz")
-        yield
-        # Add contents of dir and close archive
-        t.add(ex_path, arcname="/")
-        t.close()
-        # Remove dir
-        shutil.rmtree(ex_path)
+    # Create temp dir to store contents of archive
+    with tempfile.TemporaryDirectory() as path:
+        try:
+            # open, extract and close archive
+            t = tarfile.open(arc, "r:xz")
+            t.extractall(path)
+            t.close()
+            yield path
+        finally:
+            # open for writing, add contents of temp dir and close archive
+            t = tarfile.open(arc, "w:xz")
+            t.add(path, arcname="/")
+            t.close()
 
 
-def new_archive(arc):
+def create_archive(arc):
     """
     Creates a new, empty LZMA compressed tar archive.
 
@@ -95,116 +88,96 @@ def new_archive(arc):
     t.close()
 
 
-def get_entry_names(arc):
+def path_to_files(path):
     """
-    Gets filenames from archive
+    Returns a list of sorted filenames with path from a directory, excluding
+    the file "hash"
 
-    :param arc: an archive
-    :type arc: str
-    :return: filenames
+    :param path: a directory
+    :type path: str
+    :return: filenames with path
     :rtype: list
     """
-    t = tarfile.open(arc)
-    names = t.getnames()
-    try:
-        names.remove("")
-    except ValueError:
-        pass
-    names.sort()
-    return names
+    p = pathlib.Path(path)
+    return sorted([str(i) for i in p.iterdir() if str(i) != "hash"])
 
 
-def add_file(arc, ex_path, ent):
+def entry_name(ent, path):
     """
-    Adds file to archive.
+    Returns the name of an entry from its full path
 
-    :param arc: archive
-    :type arc: str
-    :param ex_path: extract archive to this directory
-    :type ex_path: str
-    :param ent: file to be added
+    :param ent: path to file
     :type ent: str
+    :param path: path to file's directory
+    :type path: str
+    :return: filename
+    :rtype: str
     """
-    if os.path.isfile(ent):
-        with repack_archive(arc, ex_path):
-            shutil.move(ent, os.path.join(ex_path, ent))
-    else:
-        raise FileNotFoundError
+    return ent[len(path) + 1:]
 
 
-def remove_file(arc, ex_path, ent):
+def add_entry(ent, path):
     """
-    Removes file from archive.
+    Moves file to "path" directory
 
-    :param arc: archive
-    :type arc: str
-    :param ex_path: extract archive to this directory
-    :type ex_path: str
+    :param ent: file to be moved
+    :type ent: str
+    :param path: directory
+    :type path: str
+    """
+    # If entry already exists, replace it
+    if os.path.isfile(ent) and os.path.isfile(os.path.join(path, ent)):
+        os.remove(os.path.join(path, ent))
+    try:
+        shutil.move(ent, path)
+    except shutil.Error:
+        pass
+
+
+def remove_entry(ent):
+    """
+    Removes an entry
+
     :param ent: file to be removed
     :type ent: str
     """
-    with repack_archive(arc, ex_path):
-        os.remove(os.path.join(ex_path, ent))
+    os.remove(ent)
 
 
 if __name__ == "__main__":
     archive = "test_archive.tar.xz"
-    extract_path = os.path.join(tempfile.gettempdir(), "d3ta_archive_extract")
-
     # Exit with code 1 if archive doesn't exist
-    if not os.path.isfile(archive):
-        print("Archive doesn't exist.")
+    if not os.access(archive, os.F_OK):
+        print("Archive doesn't exist")
         sys.exit(1)
-
-    # Test if archive is valid and user has permissions to read and write it
-    try:
-        with repack_archive(archive, extract_path):
-            pass
-    except tarfile.ReadError:
-        # Exit with code 2
-        print("Archive could not be opened for reading.")
+    # Exit with code 2 if user doesn't have read or write permission
+    if not (os.access(archive, os.R_OK) and os.access(archive, os.W_OK)):
+        print("You don't have permission to manage this archive")
         sys.exit(2)
-    except PermissionError:
-        # Exit with code 3
-        print("You don't have permission to manage this archive.")
-        sys.exit(3)
 
-    # Testing extracted file collection
-    print("Testing extracted file collection:")
-    entries = get_entry_names(archive)
-    entries = [os.path.join(extract_path, i) for i in entries]
-    print(entries, end="\n\n")
+    with manage_archive(archive) as extract_dir:
+        # Test full path and filename gathering
+        files = path_to_files(extract_dir)
+        print(files)
 
-    # Testing entry name collection
-    print("Testing entry name collection:")
-    entries = get_entry_names(archive)
-    print(entries, end="\n\n")
+        # Test filename gathering
+        entries = [entry_name(i, extract_dir) for i in files]
+        print(entries)
 
-    # Testing entry addition to archive
-    print("Testing entry addition:")
-    entry = "new_testfile"
-    if not os.path.isfile(entry):
-        print("Entry doesn't exist.\n")
-    else:
-        add_file(archive, extract_path, entry)
-        entries = get_entry_names(archive)
-        print(entries, end="\n\n")
+        entry = "new_entry"
 
-    # Testing entry removal
-    print("Testing entry removal:")
-    try:
-        entry = [i for i in get_entry_names(archive)
-                 if entry in i][0]
-        entry = os.path.join(extract_path, entry)
-        remove_file(archive, extract_path, entry)
-        print(get_entry_names(archive), end="\n\n")
-    except IndexError:
-        print("Entry is not in archive.\n")
+        # # Test entry addition
+        # try:
+        #     add_entry(entry, extract_dir)
+        #     files = path_to_files(extract_dir)
+        #     print(files)
+        # except FileNotFoundError:
+        #     print(entry, "doesn't exist")
 
-    # Testing new archive creation
-    print("Testing new archive creation:")
-    new_arc = "/root/will_not_work"
-    try:
-        new_archive(new_arc)
-    except PermissionError:
-        print("You don't have permission to create this archive.")
+        # Test entry removal
+        try:
+            remove_entry(os.path.join(extract_dir, entry))
+            files = path_to_files(extract_dir)
+            print(files)
+        except FileNotFoundError:
+            print(entry, "doesn't exist")
