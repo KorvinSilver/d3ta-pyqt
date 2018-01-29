@@ -90,10 +90,10 @@ def create_archive(arc):
 
 def path_to_files(path):
     """
-    Returns a list of sorted filenames with path from a directory, excluding
-    the file "hash"
+    Returns a list of sorted filenames with path from the temporary directory
+    created by manage_archive(), excluding the file "hash"
 
-    :param path: a directory
+    :param path: path to temporary directory created by manage_archive()
     :type path: str
     :return: filenames with path
     :rtype: list
@@ -104,11 +104,12 @@ def path_to_files(path):
 
 def entry_name(ent, path):
     """
-    Returns the name of an entry from its full path
+    Returns the filename from a file in the temporary directory created by
+    manage_archive()
 
     :param ent: path to file
     :type ent: str
-    :param path: path to file's directory
+    :param path: path to temporary directory created by manage_archive()
     :type path: str
     :return: filename
     :rtype: str
@@ -118,11 +119,11 @@ def entry_name(ent, path):
 
 def add_entry(ent, path):
     """
-    Moves file to "path" directory
+    Moves file to the temporary directory created by manage_archive()
 
     :param ent: file to be moved
     :type ent: str
-    :param path: directory
+    :param path: path to temporary directory created by manage_archive()
     :type path: str
     """
     # If entry already exists, replace it
@@ -136,7 +137,8 @@ def add_entry(ent, path):
 
 def remove_entry(ent):
     """
-    Removes an entry
+    Removes an entry, i.e. a file from the temporary directory created by
+    manage_archive()
 
     :param ent: file to be removed
     :type ent: str
