@@ -19,14 +19,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import argparse
+import bcrypt
 import os
 import pathlib
 import shutil
+import sys
 import tarfile
 import tempfile
-import sys
 # import urwid
-
+# from getpass import getpass
 from contextlib import contextmanager
 
 __author__ = "Korvin F. Ezüst"
@@ -36,6 +38,8 @@ __version__ = "0.1a"
 __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
+
+# TODO: re-encrypt all entries in change_password()
 
 # TODO: menu with urwid
 # TODO: text editor with urwid
@@ -99,7 +103,7 @@ def path_to_files(path):
     :rtype: list
     """
     p = pathlib.Path(path)
-    return sorted([str(i) for i in p.iterdir() if str(i) != "hash"])
+    return sorted([str(i) for i in p.iterdir() if "/hash" not in str(i)])
 
 
 def entry_name(ent, path):
@@ -146,10 +150,96 @@ def remove_entry(ent):
     os.remove(ent)
 
 
+def password_match(psw, path):
+    """
+    Checks password against the stored salted hash
+
+    :param psw: password
+    :type psw: str
+    :param path: path to temporary directory created by manage_archive()
+    :type path: str
+    :return: True|False
+    :rtype: bool
+    """
+    with open(os.path.join(path, "hash")) as f:
+        return bcrypt.checkpw(psw.encode("utf-8"), f.read().encode("utf-8"))
+
+
+def store_new_hash(psw, path):
+    """
+    Stores a salted hash in a file created using a password
+
+    :param psw: password
+    :type psw: str
+    :param path: path to temporary directory created by manage_archive()
+    :type path: str
+    """
+    with open(os.path.join(path, "hash"), "w") as f:
+        hsh = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
+        f.write(hsh.decode("utf-8"))
+
+
+def change_password(old_psw, new_psw, path):
+    # TODO: re-encrypt all entries
+    if password_match(old_psw, path):
+        store_new_hash(new_psw, path)
+    else:
+        print("Invalid password.")
+        sys.exit(3)
+
+
 if __name__ == "__main__":
-    archive = "test_archive.tar.xz"
+    # Set variables with cli arguments, easier to modify later this way
+    # change password - optional argument
+    cp = "--change-password"
+    # new archive - optional argument
+    na = "--new-diary"
+    # archive - positional argument
+    ar = "diary"
+
+    # Set usage message
+    message = "%(prog)s [-h] [{} | {}] {}".format(cp, na, ar)
+
+    parser = argparse.ArgumentParser(usage=message)
+    parser.add_argument(ar, help="[path +] filename to your {}".format(ar))
+
+    # Set custom attribute names for optional arguments
+    parser.add_argument(na, action="store_true", dest="new_archive")
+    parser.add_argument(cp, action="store_true", dest="change_pass")
+    args = parser.parse_args()
+
+    # Get positional argument's attribute with getattr() because it cannot be
+    # set with dest
+    archive = getattr(args, ar)
+
+    # Exit if both optional arguments are present
+    if args.new_archive and args.change_pass:
+        parser.print_help()
+        sys.exit(4)
+
+    # Create new archive with --new-diary option
+    if args.new_archive:
+        # Ask for password, create archive, store hash and exit
+        if not os.path.isfile(archive):
+            # password = getpass("New password:")
+            password = "pass"
+            try:
+                create_archive(archive)
+            except PermissionError:
+                print("You don't have permission to create this archive.")
+                sys.exit(2)
+            with manage_archive(archive) as extract_dir:
+                store_new_hash(password, extract_dir)
+            print("Archive created.")
+            sys.exit(0)
+        # Exit with code 1 if file already exists
+        else:
+            print("Archive already exists.")
+            sys.exit(1)
+
+    # Test archive
     # Exit with code 1 if archive doesn't exist
-    if not os.access(archive, os.F_OK):
+    if not os.path.isfile(archive):
         print("Archive doesn't exist")
         sys.exit(1)
     # Exit with code 2 if user doesn't have read or write permission
@@ -158,6 +248,24 @@ if __name__ == "__main__":
         sys.exit(2)
 
     with manage_archive(archive) as extract_dir:
+        # Ask for password
+        # password = getpass()
+        password = "pass"
+        # Check password, exit with code 3 if incorrect
+        if not password_match(password, extract_dir):
+            print("Invalid password.")
+            sys.exit(3)
+
+        # # Change password with --change-password option
+        # if args.change_pass:
+        #     # old_password = getpass("Old password:")
+        #     old_password = "psw"
+        #     # password = getpass("New password:")
+        #     password = "pass"
+        #     change_password(old_password, password, extract_dir)
+        #     print("Password changed.")
+        #     sys.exit(0)
+
         # Test full path and filename gathering
         files = path_to_files(extract_dir)
         print(files)
