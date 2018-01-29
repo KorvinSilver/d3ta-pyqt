@@ -20,9 +20,11 @@ limitations under the License.
 """
 
 import os
+import pathlib
 import shutil
 import tarfile
 import tempfile
+import sys
 # import urwid
 
 from contextlib import contextmanager
@@ -61,16 +63,20 @@ def repack_archive(arc):
     :param arc: an LZMA tar archive
     :type arc:  str
     """
-    with tempfile.TemporaryDirectory() as tmp:
-        try:
-            t = tarfile.open(arc, "r:xz")
-            t.extractall(tmp)
-            t.close()
-        finally:
-            t = tarfile.open(arc, "w:xz")
-            yield tmp
-            t.add(tmp, arcname="/")
-            t.close()
+    arc_dir = os.path.join(tempfile.gettempdir(), "d3ta_archive_extract")
+    if os.path.isdir(arc_dir):
+        shutil.rmtree(arc_dir)
+    os.makedirs(arc_dir)
+    try:
+        t = tarfile.open(arc, "r:xz")
+        t.extractall(arc_dir)
+        t.close()
+    finally:
+        t = tarfile.open(arc, "w:xz")
+        yield arc_dir
+        t.add(arc_dir, arcname="/")
+        t.close()
+        shutil.rmtree(arc_dir)
 
 
 def new_archive(arc):
@@ -84,24 +90,43 @@ def new_archive(arc):
     t.close()
 
 
-def get_entries(arc):
+def get_entry_names(arc):
     """
-    Get filenames from archive.
+    Get entry names in archive
 
-    :param arc: an LZMA compressed archive
+    :param arc: an archive
     :type arc: str
-    :return: list of names or error code on error
-    :rtype: list|int
+    :return: entry names
+    :rtype: list
     """
-    t = tarfile.open(arc, "r:xz")
+    t = tarfile.open(arc)
     names = t.getnames()
-    t.close()
     try:
         names.remove("")
     except ValueError:
         pass
     names.sort()
     return names
+
+
+def get_extracted_entries(arc):
+    """
+    Get full path and filename of files extracted from archive
+
+    :param arc: an archive
+    :type arc: str
+    :return: list of names or error code on error
+    :rtype: list|int
+    """
+    with repack_archive(arc) as arc_dir:
+        p = pathlib.Path(arc_dir)
+        names = [str(i) for i in p.iterdir() if i.is_file()]
+        try:
+            names.remove("")
+        except ValueError:
+            pass
+        names.sort()
+        return names
 
 
 def add_entry(arc, ent):
@@ -133,52 +158,60 @@ def remove_entry(arc, ent):
         os.remove(os.path.join(arc_dir, ent))
 
 
-def wrapper(func, *args):
-    try:
-        return func(*args)
-    except tarfile.ReadError:
-        return 1
-    except PermissionError:
-        return 2
-    except FileExistsError:
-        return 3
-    except FileNotFoundError:
-        return 4
-
-
 if __name__ == "__main__":
     archive = "test_archive.tar.xz"
 
-    # Testing entry collection
-    entries = wrapper(get_entries, archive)
-    if entries == 1:
-        print("Archive could not be opened for reading.")
-    elif entries == 2:
-        print("You don't have permission to open this archive.")
-    elif entries == 4:
+    # Exit with code 1 if archive doesn't exist
+    if not os.path.isfile(archive):
         print("Archive doesn't exist.")
-    else:
-        print(entries)
+        sys.exit(1)
+
+    # Test if archive is valid and user has permissions to read and write it
+    try:
+        with repack_archive(archive):
+            pass
+    except tarfile.ReadError:
+        # Exit with code 2
+        print("Archive could not be opened for reading.")
+        sys.exit(2)
+    except PermissionError:
+        # Exit with code 3
+        print("You don't have permission to manage this archive.")
+        sys.exit(3)
+
+    # Testing entry collection
+    print("Testing entry collection:")
+    entries = get_extracted_entries(archive)
+    print(entries, end="\n\n")
+
+    # Testing entry name collection
+    print("Testing entry name collection:")
+    entries = get_entry_names(archive)
+    print(entries, end="\n\n")
 
     # Testing entry addition to archive
-    entry = "new_entry"
-    result = wrapper(add_entry, archive, entry)
-    if result == 2:
-        print("You don't have permission to add entries to this archive.")
-    elif result == 4:
-        print("Entry doesn't exist.")
+    print("Testing entry addition:")
+    entry = "new_testfile"
+    if not os.path.isfile(entry):
+        print("Entry doesn't exist.\n")
     else:
-        print(result)
+        add_entry(archive, entry)
+        entries = get_extracted_entries(archive)
+        print(entries, end="\n\n")
 
-    # Testing entry removal from archive
-    entry = "file_beta"
-    result = wrapper(remove_entry, archive, entry)
-    if result == 2:
-        print("You don't have permission to remove entries from this archive")
+    # Testing entry removal
+    print("Testing entry removal:")
+    try:
+        entry = [i for i in get_extracted_entries(archive) if entry in i][0]
+        remove_entry(archive, entry)
+        print(get_entry_names(archive), end="\n\n")
+    except IndexError:
+        print("Entry is not in archive.\n")
 
-    # Testing archive creation
-    result = wrapper(new_archive, "/root/will_not_work")
-    if result == 2:
-        print("You don't have permission to create this archive")
-    elif result == 3:
-        print("This archive already exists")
+    # Testing new archive creation
+    print("Testing new archive creation:")
+    new_arc = "/root/will_not_work"
+    try:
+        new_archive(new_arc)
+    except PermissionError:
+        print("You don't have permission to create this archive.")
