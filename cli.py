@@ -23,13 +23,16 @@ import argparse
 import bcrypt
 import os
 import pathlib
-import shutil
+# import shutil
 import sys
 import tarfile
 import tempfile
+import time
 # import urwid
-# from getpass import getpass
 from contextlib import contextmanager
+from cryptolib.aes import *
+
+# from getpass import getpass
 
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
@@ -121,33 +124,47 @@ def entry_name(ent, path):
     return ent[len(path) + 1:]
 
 
-def add_entry(ent, path):
-    """
-    Moves file to the temporary directory created by manage_archive()
+# def add_entry(ent, path):
+#     """
+#     Moves file to the temporary directory created by manage_archive()
+#
+#     :param ent: file to be moved
+#     :type ent: str
+#     :param path: path to temporary directory created by manage_archive()
+#     :type path: str
+#     """
+#     # If entry already exists, replace it
+#     if os.path.isfile(ent) and os.path.isfile(os.path.join(path, ent)):
+#         os.remove(os.path.join(path, ent))
+#     try:
+#         shutil.move(ent, path)
+#     except shutil.Error:
+#         pass
 
-    :param ent: file to be moved
-    :type ent: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    """
-    # If entry already exists, replace it
-    if os.path.isfile(ent) and os.path.isfile(os.path.join(path, ent)):
-        os.remove(os.path.join(path, ent))
-    try:
-        shutil.move(ent, path)
-    except shutil.Error:
-        pass
 
-
-def remove_entry(ent):
+def remove_entry(path, ent):
     """
     Removes an entry, i.e. a file from the temporary directory created by
     manage_archive()
 
+    :param path: path to temporary directory created by manage_archive()
     :param ent: file to be removed
     :type ent: str
     """
-    os.remove(ent)
+    os.remove(os.path.join(path, ent))
+
+
+def remove_all_entries(path):
+    """
+    Removes all the entries, i.e. all the entry files in the temporary
+    directory
+
+    :param path: path to temporary directory created by manage_archive()
+    :type path: str
+    """
+    file_list = path_to_files(path)
+    for i in file_list:
+        os.remove(i)
 
 
 def password_match(psw, path):
@@ -179,13 +196,86 @@ def store_new_hash(psw, path):
         f.write(hsh.decode("utf-8"))
 
 
+def save_entry(psw, txt, path, ent):
+    """
+    Encrypts a text and writes it to a file in the temporary directory
+
+    :param psw: password
+    :type psw: str
+    :param txt: entry text
+    :type txt: str
+    :param path: path to temporary directory created by manage_archive()
+    :type path: str
+    :param ent: entry filename
+    :type ent: str
+    """
+    txt = encrypt(psw, txt)
+    with open(os.path.join(path, ent), "w") as f:
+        f.write(txt)
+
+
+def entry_text(psw, path, ent):
+    """
+    Returns the decrypted text from the entry from the temporary directory
+
+    :param psw: password
+    :type psw: str
+    :param path: path to temporary directory created by manage_archive()
+    :type path: str
+    :param ent: entry filename
+    :type ent: str
+    :return: decrypted text
+    :rtype: str
+    """
+    with open(os.path.join(path, ent)) as f:
+        return decrypt(psw, f.read())
+
+
 def change_password(old_psw, new_psw, path):
-    # TODO: re-encrypt all entries
+    """
+    Changes the password of an archive by rewriting the hash file and
+    re-encrypting the entries in the temporary directory.
+    Exits if old password is incorrect.
+
+    :param old_psw: old password
+    :type old_psw: str
+    :param new_psw: new password
+    :type new_psw: str
+    :param path: path to temporary directory created by manage_archive()
+    :type path: str
+    """
     if password_match(old_psw, path):
         store_new_hash(new_psw, path)
+
+        file_list = path_to_files(path)
+
+        for i in file_list:
+            with open(i) as f:
+                txt = decrypt(old_psw, f.read())
+            with open(i, "w") as f:
+                f.write(encrypt(new_psw, txt))
     else:
         print("Invalid password.")
         sys.exit(3)
+
+
+def datetime_string():
+    """
+    Returns year, month, day, hour, minute and second of the local time with
+    a format like "2018-01-01 12.00.00"
+
+    :return:
+    :rtype:
+    """
+    y, mo, d, h, mi, s, _, _, _ = time.localtime()
+    return "{}-{}-{} {}.{}.{}".format(
+        y,
+        str(mo).zfill(2),
+        str(d).zfill(2),
+        str(h).zfill(2),
+        str(mi).zfill(2),
+        str(s).zfill(2),
+    )
 
 
 if __name__ == "__main__":
@@ -274,7 +364,15 @@ if __name__ == "__main__":
         entries = [entry_name(i, extract_dir) for i in files]
         print(entries)
 
-        entry = "new_entry"
+        # # Test new entry creation
+        # new_entry = datetime_string()
+        # text = "Lorem ipsum, dolor sit amet"
+        # save_entry(password, text, extract_dir, new_entry)
+        #
+        # # Test entry read
+        # print(entry_text(password, extract_dir, new_entry))
+
+        # entry = "new_entry"
 
         # # Test entry addition
         # try:
@@ -284,10 +382,10 @@ if __name__ == "__main__":
         # except FileNotFoundError:
         #     print(entry, "doesn't exist")
 
-        # Test entry removal
-        try:
-            remove_entry(os.path.join(extract_dir, entry))
-            files = path_to_files(extract_dir)
-            print(files)
-        except FileNotFoundError:
-            print(entry, "doesn't exist")
+        # # Test entry removal
+        # try:
+        #     remove_entry(os.path.join(extract_dir, entry))
+        #     files = path_to_files(extract_dir)
+        #     print(files)
+        # except FileNotFoundError:
+        #     print(entry, "doesn't exist")
