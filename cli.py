@@ -20,19 +20,12 @@ limitations under the License.
 """
 
 import argparse
-import bcrypt
 import os
-import pathlib
-# import shutil
+import sqlite3
 import sys
-import tarfile
-import tempfile
 import time
-# import urwid
 from contextlib import contextmanager
 from cryptolib.aes import *
-
-# from getpass import getpass
 
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
@@ -42,240 +35,79 @@ __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
 
-# TODO: re-encrypt all entries in change_password()
+# TODO: store password's hash
+# TODO: password validation
+# TODO: password change
 
 # TODO: menu with urwid
 # TODO: text editor with urwid
 
-# TODO: option to create archive
-# TODO: option to delete archive
-# TODO: ask confirmation twice when deleting archive
+# TODO: option to create database
+# TODO: option to delete database
+# TODO: ask confirmation twice when deleting database
 
-# TODO: option to create entry in archive
-# TODO: option to modify entry in archive
-# TODO: option to delete entry from archive
-# TODO: option to delete all entries from archive
+# TODO: option to create entry in database
+# TODO: option to modify entry in database
+# TODO: option to delete entry from database
+# TODO: option to delete all entries from database
 # TODO: ask confirmation when deleting entry
 # TODO: ask confirmation twice when deleting all entries
 
 
-@contextmanager
-def manage_archive(arc):
-    """
-    Extracts the contents of an LZMA compressed tar archive to a temporary
-    directory, yields, recreates the archive with the contents of that
-    directory and removes it
-
-    :param arc: an LZMA tar archive
-    :type arc: str
-    """
-    # Create temp dir to store contents of archive
-    with tempfile.TemporaryDirectory() as path:
-        try:
-            # open, extract and close archive
-            t = tarfile.open(arc, "r:xz")
-            t.extractall(path)
-            t.close()
-            yield path
-        finally:
-            # open for writing, add contents of temp dir and close archive
-            t = tarfile.open(arc, "w:xz")
-            t.add(path, arcname="/")
-            t.close()
-
-
-def create_archive(arc):
-    """
-    Creates a new, empty LZMA compressed tar archive.
-
-    :param arc: archive to be created
-    :type arc: str
-    """
-    t = tarfile.open(arc, "x:xz")
-    t.close()
-
-
-def path_to_files(path):
-    """
-    Returns a list of sorted filenames with path from the temporary directory
-    created by manage_archive(), excluding the file "hash"
-
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    :return: filenames with path
-    :rtype: list
-    """
-    p = pathlib.Path(path)
-    return sorted([str(i) for i in p.iterdir() if "/hash" not in str(i)])
-
-
-def entry_name(ent, path):
-    """
-    Returns the filename from a file in the temporary directory created by
-    manage_archive()
-
-    :param ent: path to file
-    :type ent: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    :return: filename
-    :rtype: str
-    """
-    return ent[len(path) + 1:]
-
-
-# def add_entry(ent, path):
-#     """
-#     Moves file to the temporary directory created by manage_archive()
-#
-#     :param ent: file to be moved
-#     :type ent: str
-#     :param path: path to temporary directory created by manage_archive()
-#     :type path: str
-#     """
-#     # If entry already exists, replace it
-#     if os.path.isfile(ent) and os.path.isfile(os.path.join(path, ent)):
-#         os.remove(os.path.join(path, ent))
-#     try:
-#         shutil.move(ent, path)
-#     except shutil.Error:
-#         pass
-
-
-def remove_entry(path, ent):
-    """
-    Removes an entry, i.e. a file from the temporary directory created by
-    manage_archive()
-
-    :param path: path to temporary directory created by manage_archive()
-    :param ent: file to be removed
-    :type ent: str
-    """
-    os.remove(os.path.join(path, ent))
-
-
-def remove_all_entries(path):
-    """
-    Removes all the entries, i.e. all the entry files in the temporary
-    directory
-
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    """
-    file_list = path_to_files(path)
-    for i in file_list:
-        os.remove(i)
-
-
-def password_match(psw, path):
-    """
-    Checks password against the stored salted hash
-
-    :param psw: password
-    :type psw: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    :return: True|False
-    :rtype: bool
-    """
-    with open(os.path.join(path, "hash")) as f:
-        return bcrypt.checkpw(psw.encode("utf-8"), f.read().encode("utf-8"))
-
-
-def store_new_hash(psw, path):
-    """
-    Stores a salted hash in a file created using a password
-
-    :param psw: password
-    :type psw: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    """
-    with open(os.path.join(path, "hash"), "w") as f:
-        hsh = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
-        f.write(hsh.decode("utf-8"))
-
-
-def save_entry(psw, txt, path, ent):
-    """
-    Encrypts a text and writes it to a file in the temporary directory
-
-    :param psw: password
-    :type psw: str
-    :param txt: entry text
-    :type txt: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    :param ent: entry filename
-    :type ent: str
-    """
-    txt = encrypt(psw, txt)
-    with open(os.path.join(path, ent), "w") as f:
-        f.write(txt)
-
-
-def entry_text(psw, path, ent):
-    """
-    Returns the decrypted text from the entry from the temporary directory
-
-    :param psw: password
-    :type psw: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    :param ent: entry filename
-    :type ent: str
-    :return: decrypted text
-    :rtype: str
-    """
-    with open(os.path.join(path, ent)) as f:
-        return decrypt(psw, f.read())
-
-
-def change_password(old_psw, new_psw, path):
-    """
-    Changes the password of an archive by rewriting the hash file and
-    re-encrypting the entries in the temporary directory.
-    Exits if old password is incorrect.
-
-    :param old_psw: old password
-    :type old_psw: str
-    :param new_psw: new password
-    :type new_psw: str
-    :param path: path to temporary directory created by manage_archive()
-    :type path: str
-    """
-    if password_match(old_psw, path):
-        store_new_hash(new_psw, path)
-
-        file_list = path_to_files(path)
-
-        for i in file_list:
-            with open(i) as f:
-                txt = decrypt(old_psw, f.read())
-            with open(i, "w") as f:
-                f.write(encrypt(new_psw, txt))
+def create_database(db, tb):
+    if not os.path.isfile(db):
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+        c.execute(f"CREATE TABLE {tb} (date date, entry longtext)")
+        conn.close()
     else:
-        print("Invalid password.")
-        sys.exit(3)
+        print(f"'{db}' exists.")
+        sys.exit(1)
 
 
-def datetime_string():
-    """
-    Returns year, month, day, hour, minute and second of the local time with
-    a format like "2018-01-01 12.00.00"
+@contextmanager
+def open_database(db):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    try:
+        c.fetchone()
+        yield c
+    except sqlite3.DatabaseError:
+        print(f"'{db}' is not a database.")
+        sys.exit(2)
+    finally:
+        conn.commit()
+        c.close()
+        conn.close()
 
-    :return:
-    :rtype:
-    """
-    y, mo, d, h, mi, s, _, _, _ = time.localtime()
-    return "{}-{}-{} {}.{}.{}".format(
-        y,
-        str(mo).zfill(2),
-        str(d).zfill(2),
-        str(h).zfill(2),
-        str(mi).zfill(2),
-        str(s).zfill(2),
-    )
+
+def add_entry(c, tb, dt, psw, ent):
+    c.execute(f"SELECT entry FROM {tb} WHERE date = '{dt}'")
+    if c.fetchone() is None:
+        ent = encrypt(psw, ent)
+        c.execute(f"INSERT INTO {tb} VALUES ('{dt}', '{ent}')")
+    else:
+        print(f"Entry with {dt} already exists.")
+
+
+def retrieve_entry(c, tb, dt, psw):
+    c.execute(f"SELECT entry FROM {tb} WHERE date = '{dt}'")
+    return decrypt(psw, c.fetchone()[0])
+
+
+def retrieve_all_entries(c, tb, psw):
+    lst = []
+    for ent in c.execute(f"SELECT * FROM {tb}"):
+        lst.append((ent[0], decrypt(psw, ent[1])))
+    return lst
+
+
+def delete_entry(c, tb, dt):
+    c.execute(f"DELETE FROM {tb} WHERE date = '{dt}'")
+
+
+def delete_table(c, tb):
+    c.execute(f"DELETE FROM {tb}")
 
 
 if __name__ == "__main__":
@@ -283,109 +115,38 @@ if __name__ == "__main__":
     # change password - optional argument
     cp = "--change-password"
     # new archive - optional argument
-    na = "--new-diary"
-    # archive - positional argument
-    ar = "diary"
+    nd = "--new-diary"
+    # database - positional argument
+    base = "diary"
 
     # Set usage message
-    message = "%(prog)s [-h] [{} | {}] {}".format(cp, na, ar)
-
+    message = f"%(prog)s [-h] [{cp} | {nd}] {base}"
     parser = argparse.ArgumentParser(usage=message)
-    parser.add_argument(ar, help="[path +] filename to your {}".format(ar))
+    parser.add_argument(base, help=f"[path +] filename to your {base}")
 
     # Set custom attribute names for optional arguments
-    parser.add_argument(na, action="store_true", dest="new_archive")
+    parser.add_argument(nd, action="store_true", dest="new_database")
     parser.add_argument(cp, action="store_true", dest="change_pass")
     args = parser.parse_args()
 
     # Get positional argument's attribute with getattr() because it cannot be
     # set with dest
-    archive = getattr(args, ar)
+    database = getattr(args, base)
 
     # Exit if both optional arguments are present
-    if args.new_archive and args.change_pass:
+    if args.new_database and args.change_pass:
         parser.print_help()
         sys.exit(4)
 
-    # Create new archive with --new-diary option
-    if args.new_archive:
-        # Ask for password, create archive, store hash and exit
-        if not os.path.isfile(archive):
-            # password = getpass("New password:")
-            password = "pass"
-            try:
-                create_archive(archive)
-            except PermissionError:
-                print("You don't have permission to create this archive.")
-                sys.exit(2)
-            with manage_archive(archive) as extract_dir:
-                store_new_hash(password, extract_dir)
-            print("Archive created.")
-            sys.exit(0)
-        # Exit with code 1 if file already exists
-        else:
-            print("Archive already exists.")
-            sys.exit(1)
+    table = base
+    password = "pass"
+    datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-    # Test archive
-    # Exit with code 1 if archive doesn't exist
-    if not os.path.isfile(archive):
-        print("Archive doesn't exist")
-        sys.exit(1)
-    # Exit with code 2 if user doesn't have read or write permission
-    if not (os.access(archive, os.R_OK) and os.access(archive, os.W_OK)):
-        print("You don't have permission to manage this archive")
-        sys.exit(2)
+    # create_database(database, table)
 
-    with manage_archive(archive) as extract_dir:
-        # Ask for password
-        # password = getpass()
-        password = "pass"
-        # Check password, exit with code 3 if incorrect
-        if not password_match(password, extract_dir):
-            print("Invalid password.")
-            sys.exit(3)
-
-        # # Change password with --change-password option
-        # if args.change_pass:
-        #     # old_password = getpass("Old password:")
-        #     old_password = "psw"
-        #     # password = getpass("New password:")
-        #     password = "pass"
-        #     change_password(old_password, password, extract_dir)
-        #     print("Password changed.")
-        #     sys.exit(0)
-
-        # Test full path and filename gathering
-        files = path_to_files(extract_dir)
-        print(files)
-
-        # Test filename gathering
-        entries = [entry_name(i, extract_dir) for i in files]
-        print(entries)
-
-        # # Test new entry creation
-        # new_entry = datetime_string()
-        # text = "Lorem ipsum, dolor sit amet"
-        # save_entry(password, text, extract_dir, new_entry)
-        #
-        # # Test entry read
-        # print(entry_text(password, extract_dir, new_entry))
-
-        # entry = "new_entry"
-
-        # # Test entry addition
-        # try:
-        #     add_entry(entry, extract_dir)
-        #     files = path_to_files(extract_dir)
-        #     print(files)
-        # except FileNotFoundError:
-        #     print(entry, "doesn't exist")
-
-        # # Test entry removal
-        # try:
-        #     remove_entry(os.path.join(extract_dir, entry))
-        #     files = path_to_files(extract_dir)
-        #     print(files)
-        # except FileNotFoundError:
-        #     print(entry, "doesn't exist")
+    with open_database(database) as cr:
+        # add_entry(cr, table, datetime, password, "Hello, SQLite!")
+        print(retrieve_all_entries(cr, table, password))
+        # print(retrieve_entry(cr, table, "2018-02-01 22:30:49", password))
+        # delete_entry(cr, table, "2018-02-01 22:30:49")
+        # delete_table(cr, table)
