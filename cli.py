@@ -20,6 +20,8 @@ limitations under the License.
 """
 
 import argparse
+import bcrypt
+import getpass
 import os
 import sqlite3
 import sys
@@ -35,9 +37,7 @@ __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
 
-# TODO: store password's hash
-# TODO: password validation
-# TODO: password change
+# TODO: Documentation
 
 # TODO: menu with urwid
 # TODO: text editor with urwid
@@ -54,11 +54,17 @@ __status__ = "Development"
 # TODO: ask confirmation twice when deleting all entries
 
 
-def create_database(db, tb):
+def create_database(db, tb, psw):
     if not os.path.isfile(db):
         conn = sqlite3.connect(db)
         c = conn.cursor()
         c.execute(f"CREATE TABLE {tb} (date date, entry longtext)")
+        c.execute("CREATE TABLE hash (hash text)")
+        hashed = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
+        hashed = hashed.decode("utf-8")
+        c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
+        conn.commit()
+        c.close()
         conn.close()
     else:
         print(f"'{db}' exists.")
@@ -90,12 +96,12 @@ def add_entry(c, tb, dt, psw, ent):
         print(f"Entry with {dt} already exists.")
 
 
-def retrieve_entry(c, tb, dt, psw):
+def single_entry(c, tb, dt, psw):
     c.execute(f"SELECT entry FROM {tb} WHERE date = '{dt}'")
     return decrypt(psw, c.fetchone()[0])
 
 
-def retrieve_all_entries(c, tb, psw):
+def all_entries(c, tb, psw):
     lst = []
     for ent in c.execute(f"SELECT * FROM {tb}"):
         lst.append((ent[0], decrypt(psw, ent[1])))
@@ -108,6 +114,23 @@ def delete_entry(c, tb, dt):
 
 def delete_table(c, tb):
     c.execute(f"DELETE FROM {tb}")
+
+
+def valid_password(c, psw):
+    c.execute(f"SELECT hash FROM hash")
+    hashed = (c.fetchone()[0]).encode("utf-8")
+    return bcrypt.checkpw(psw.encode("utf-8"), hashed)
+
+
+def change_password(c, old_psw, new_psw):
+    if valid_password(c, old_psw):
+        c.execute("DROP TABLE hash")
+        c.execute("CREATE TABLE hash (hash text)")
+        hashed = bcrypt.hashpw(new_psw.encode("utf-8"), bcrypt.gensalt())
+        hashed = hashed.decode("utf-8")
+        c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
+    else:
+        print("Invalid password.")
 
 
 if __name__ == "__main__":
@@ -139,14 +162,36 @@ if __name__ == "__main__":
         sys.exit(4)
 
     table = base
-    password = "pass"
+
+    if args.change_pass:
+        with open_database(database) as cr:
+            password = getpass.getpass("Old Password:")
+            if valid_password(cr, password):
+                new_password = getpass.getpass("New Password:")
+                re_check = getpass.getpass("New Password again:")
+                if re_check == new_password:
+                    change_password(cr, password, new_password)
+                    print("Password changed.")
+                    sys.exit(0)
+                else:
+                    print("Passwords don't match.")
+                    sys.exit(1)
+            else:
+                print("Invalid password.")
+
     datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-    # create_database(database, table)
+    # create_database(database, table, password)
 
     with open_database(database) as cr:
+        password = getpass.getpass()
+        if not valid_password(cr, password):
+            print("Invalid password.")
+            sys.exit(1)
+        else:
+            pass
         # add_entry(cr, table, datetime, password, "Hello, SQLite!")
-        print(retrieve_all_entries(cr, table, password))
-        # print(retrieve_entry(cr, table, "2018-02-01 22:30:49", password))
+        # print(all_entries(cr, table, password))
+        # print(single_entry(cr, table, "2018-02-01 22:30:49", password))
         # delete_entry(cr, table, "2018-02-01 22:30:49")
         # delete_table(cr, table)
