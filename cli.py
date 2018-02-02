@@ -37,29 +37,50 @@ __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
 
-# TODO: Documentation
+# TODO: re-encrypt all entries in change_password()
 
 # TODO: menu with urwid
 # TODO: text editor with urwid
 
-# TODO: option to create database
-# TODO: option to delete database
+# TODO: menu option to create database
+# TODO: menu option to delete database
 # TODO: ask confirmation twice when deleting database
 
-# TODO: option to create entry in database
-# TODO: option to modify entry in database
-# TODO: option to delete entry from database
-# TODO: option to delete all entries from database
+# TODO: menu option to create entry in database
+# TODO: menu option to modify entry in database
+# TODO: menu option to delete entry from database
+# TODO: menu option to delete all entries from database
 # TODO: ask confirmation when deleting entry
 # TODO: ask confirmation twice when deleting all entries
 
 
 def create_database(db, tb, psw):
-    if not os.path.isfile(db):
+    """
+    Creates a new database file
+
+    :param db: filename
+    :type db: str
+    :param tb: table name
+    :type tb: str
+    :param psw: password
+    :type psw: str
+    """
+    # Create if doesn't exist
+    if not os.path.exists(db):
         conn = sqlite3.connect(db)
         c = conn.cursor()
-        c.execute(f"CREATE TABLE {tb} (date date, entry longtext)")
+        # Create new table with name as value of 'tb'.
+        # In that table, create columns date, hint and entry.
+        # date is datetime type (i.e. with format 2018-01-02 12:34:56)
+        # hint is tinytext type (max 255 characters)
+        # entry is longtext type (max 4 294 967 295 characters)
+        c.execute(f"CREATE TABLE {tb} (date datetime, hint tinytext, "
+                  f"entry longtext)")
+        # Create new table with name hash
+        # In that table, create column hash
+        # hash is text type (max 65 535 characters)
         c.execute("CREATE TABLE hash (hash text)")
+        # Store salted hash generated from password in hash
         hashed = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
         hashed = hashed.decode("utf-8")
         c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
@@ -73,13 +94,23 @@ def create_database(db, tb, psw):
 
 @contextmanager
 def open_database(db):
+    """
+    Open database as a context manager
+
+    :param db: filename
+    :type db: str
+    :return: generator iterator
+    :rtype: sqlite3.Cursor
+    """
     conn = sqlite3.connect(db)
     c = conn.cursor()
     try:
+        # Try to fetch something to see if sqlite3.DatabaseError gets raised
         c.fetchone()
         yield c
     except sqlite3.DatabaseError:
-        print(f"'{db}' is not a database.")
+        print(f"'{db}' is not a database or you don't have the necessary "
+              f"permissions.")
         sys.exit(2)
     finally:
         conn.commit()
@@ -87,48 +118,137 @@ def open_database(db):
         conn.close()
 
 
-def add_entry(c, tb, dt, psw, ent):
+def add_entry(c, tb, dt, psw, ent, ht=""):
+    """
+    Adds a new row in table 'tb'
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param tb: table
+    :type tb: str
+    :param dt: datetime
+    :type dt: str
+    :param psw: password
+    :type psw: psw
+    :param ent: entry
+    :type ent: str
+    :param ht: hint
+    :type ht: str
+    """
+    # Check if row with 'datetime' exists
     c.execute(f"SELECT entry FROM {tb} WHERE date = '{dt}'")
     if c.fetchone() is None:
+        # Encrypt entry
         ent = encrypt(psw, ent)
-        c.execute(f"INSERT INTO {tb} VALUES ('{dt}', '{ent}')")
+        # Store datetime, hint and encrypted entry
+        c.execute(f"INSERT INTO {tb} VALUES ('{dt}', '{ht}', '{ent}')")
     else:
         print(f"Entry with {dt} already exists.")
 
 
 def single_entry(c, tb, dt, psw):
+    """
+    Returns a decrypted entry from table 'tb'
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param tb: table
+    :type tb: str
+    :param dt: datetime
+    :type dt: str
+    :param psw: password
+    :type psw: str
+    :return: decrypted entry
+    :rtype: str
+    """
+    # Get the entry where its datetime matches 'dt'
     c.execute(f"SELECT entry FROM {tb} WHERE date = '{dt}'")
     return decrypt(psw, c.fetchone()[0])
 
 
-def all_entries(c, tb, psw):
+def all_entry_names(c, tb):
+    """
+    Returns the names of all entries in table 'tb'
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param tb: table
+    :type tb: str
+    :return: list of tuples containing a datetime and a hint
+    :rtype: list
+    """
     lst = []
     for ent in c.execute(f"SELECT * FROM {tb}"):
-        lst.append((ent[0], decrypt(psw, ent[1])))
+        lst.append((ent[0], ent[1]))
     return lst
 
 
 def delete_entry(c, tb, dt):
+    """
+    Deletes an entry from table 'tb'
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param tb: table
+    :type tb: str
+    :param dt: datetime
+    :type dt: str
+    """
+    # Deletes an entry where its datetime matches 'dt'
     c.execute(f"DELETE FROM {tb} WHERE date = '{dt}'")
 
 
 def delete_table(c, tb):
+    """
+    Deletes table 'tb' from database
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param tb: table
+    :type tb: str
+    """
     c.execute(f"DELETE FROM {tb}")
 
 
 def valid_password(c, psw):
+    """
+    Validates password
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param psw: password
+    :type psw: str
+    :return: True|False
+    :rtype: bool
+    """
+    # Get stored hash from table hash
     c.execute(f"SELECT hash FROM hash")
     hashed = (c.fetchone()[0]).encode("utf-8")
     return bcrypt.checkpw(psw.encode("utf-8"), hashed)
 
 
 def change_password(c, old_psw, new_psw):
+    """
+    Changes password
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param old_psw: old password
+    :type old_psw: str
+    :param new_psw: new password
+    :type new_psw: str
+    """
     if valid_password(c, old_psw):
+        # Recreate table hash
         c.execute("DROP TABLE hash")
         c.execute("CREATE TABLE hash (hash text)")
+        # Store salted hash from password
         hashed = bcrypt.hashpw(new_psw.encode("utf-8"), bcrypt.gensalt())
         hashed = hashed.decode("utf-8")
         c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
+
+        # TODO: re-encrypt all entries
+
     else:
         print("Invalid password.")
 
@@ -161,12 +281,48 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(4)
 
+    # Exit if database doesn't exist and not trying to create new
+    if not os.path.isfile(database) and not args.new_database:
+        print(f"'{database}' doesn't exist.")
+        sys.exit(1)
+
+    # Exit if trying to create new database but the path exists
+    if os.path.exists(database) and args.new_database:
+        print(f"'{database}' already exists.")
+        sys.exit(1)
+
+    # Create new database and exit
+    if args.new_database:
+        try:
+            # ask password twice
+            password = getpass.getpass()
+            re_check = getpass.getpass("Password again:")
+            if password == re_check:
+                create_database(database, base, password)
+                print(f"'{database}' created.")
+                sys.exit(0)
+            else:
+                print("Passwords don't match.")
+                sys.exit(1)
+        except sqlite3.OperationalError:
+            print(f"Unable to create '{database}'.\n"
+                  f"Check path and permissions.")
+            sys.exit(1)
+
+    # Check permissions of database
+    if not (os.access(database, os.R_OK) or os.access(database, os.W_OK)):
+        print("You don't have the necessary permissions.")
+        sys.exit(1)
+
     table = base
 
+    # Change password and exit
     if args.change_pass:
+        # open database
         with open_database(database) as cr:
             password = getpass.getpass("Old Password:")
             if valid_password(cr, password):
+                # ask new password twice
                 new_password = getpass.getpass("New Password:")
                 re_check = getpass.getpass("New Password again:")
                 if re_check == new_password:
@@ -178,20 +334,17 @@ if __name__ == "__main__":
                     sys.exit(1)
             else:
                 print("Invalid password.")
-
-    datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-
-    # create_database(database, table, password)
-
+    # Open database
     with open_database(database) as cr:
         password = getpass.getpass()
         if not valid_password(cr, password):
             print("Invalid password.")
             sys.exit(1)
-        else:
-            pass
-        # add_entry(cr, table, datetime, password, "Hello, SQLite!")
-        # print(all_entries(cr, table, password))
-        # print(single_entry(cr, table, "2018-02-01 22:30:49", password))
-        # delete_entry(cr, table, "2018-02-01 22:30:49")
+
+        # Get date and time to store in database
+        datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        # add_entry(cr, table, datetime, password, "Hello, SQLite!", "hint")
+        print(all_entry_names(cr, table))
+        # print(single_entry(cr, table, "2018-02-02 10:33:27", password))
+        # delete_entry(cr, table, "2018-02-02 10:32:59")
         # delete_table(cr, table)
