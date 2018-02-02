@@ -178,7 +178,7 @@ def all_entry_names(c, tb):
     :rtype: list
     """
     lst = []
-    for ent in c.execute(f"SELECT * FROM {tb}"):
+    for ent in c.execute(f"SELECT * FROM {tb} ORDER BY date DESC"):
         lst.append((ent[0], ent[1]))
     return lst
 
@@ -343,7 +343,7 @@ if __name__ == "__main__":
 
         # Get date and time to store in database
         datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        # add_entry(cr, table, datetime, password, "Hello, SQLite!", "hint")
+        # add_entry(cr, table, datetime, password, "Dolor sit amet?", "dolor")
         print(all_entry_names(cr, table))
         # print(single_entry(cr, table, "2018-02-02 10:33:27", password))
         # delete_entry(cr, table, "2018-02-02 10:32:59")
