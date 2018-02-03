@@ -37,8 +37,6 @@ __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
 
-# TODO: re-encrypt all entries in change_password()
-
 # TODO: menu with urwid
 # TODO: text editor with urwid
 
@@ -52,44 +50,6 @@ __status__ = "Development"
 # TODO: menu option to delete all entries from database
 # TODO: ask confirmation when deleting entry
 # TODO: ask confirmation twice when deleting all entries
-
-
-def create_database(db, tb, psw):
-    """
-    Creates a new database file
-
-    :param db: filename
-    :type db: str
-    :param tb: table name
-    :type tb: str
-    :param psw: password
-    :type psw: str
-    """
-    # Create if doesn't exist
-    if not os.path.exists(db):
-        conn = sqlite3.connect(db)
-        c = conn.cursor()
-        # Create new table with name as value of 'tb'.
-        # In that table, create columns date, hint and entry.
-        # date is datetime type (i.e. with format 2018-01-02 12:34:56)
-        # hint is tinytext type (max 255 characters)
-        # entry is longtext type (max 4 294 967 295 characters)
-        c.execute(f"CREATE TABLE {tb} (date datetime, hint tinytext, "
-                  f"entry longtext)")
-        # Create new table with name hash
-        # In that table, create column hash
-        # hash is text type (max 65 535 characters)
-        c.execute("CREATE TABLE hash (hash text)")
-        # Store salted hash generated from password in hash
-        hashed = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
-        hashed = hashed.decode("utf-8")
-        c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
-        conn.commit()
-        c.close()
-        conn.close()
-    else:
-        print(f"'{db}' exists.")
-        sys.exit(1)
 
 
 @contextmanager
@@ -116,6 +76,55 @@ def open_database(db):
         conn.commit()
         c.close()
         conn.close()
+
+
+def create_main_table(c, tb):
+    """
+    Create new table with name as value of 'tb'.
+    In that table, create columns date, hint and entry:
+    - date is datetime type (i.e. with format 2018-01-02 12:34:56)
+    - hint is tinytext type (max 255 characters)
+    - entry is longtext type (max 4 294 967 295 characters).
+
+    :param c: sqlite3 Cursor instance
+    :type c: sqlite3.Cursor
+    :param tb: table
+    :type tb: str
+    """
+    c.execute(f"CREATE TABLE {tb} (date datetime, hint tinytext, "
+              f"entry longtext)")
+
+
+def create_database(db, tb, psw):
+    """
+    Creates a new database file
+
+    :param db: filename
+    :type db: str
+    :param tb: table name
+    :type tb: str
+    :param psw: password
+    :type psw: str
+    """
+    # Create if doesn't exist
+    if not os.path.exists(db):
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+        create_main_table(c, tb)
+        # Create new table with name hash
+        # In that table, create column hash
+        # hash is text type (max 65 535 characters)
+        c.execute("CREATE TABLE hash (hash text)")
+        # Store salted hash generated from password in hash
+        hashed = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
+        hashed = hashed.decode("utf-8")
+        c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
+        conn.commit()
+        c.close()
+        conn.close()
+    else:
+        print(f"'{db}' exists.")
+        sys.exit(1)
 
 
 def add_entry(c, tb, dt, psw, ent, ht=""):
@@ -207,7 +216,7 @@ def delete_table(c, tb):
     :param tb: table
     :type tb: str
     """
-    c.execute(f"DELETE FROM {tb}")
+    c.execute(f"DROP TABLE {tb}")
 
 
 def valid_password(c, psw):
@@ -227,9 +236,10 @@ def valid_password(c, psw):
     return bcrypt.checkpw(psw.encode("utf-8"), hashed)
 
 
-def change_password(c, old_psw, new_psw):
+def change_password(c, old_psw, new_psw, tb):
     """
-    Changes password
+    Changes password by dropping then re-creating both the hash and the
+    entry tables
 
     :param c: sqlite3 Cursor instance
     :type c: sqlite3.Cursor
@@ -237,6 +247,8 @@ def change_password(c, old_psw, new_psw):
     :type old_psw: str
     :param new_psw: new password
     :type new_psw: str
+    :param tb: table
+    :type tb: str
     """
     if valid_password(c, old_psw):
         # Recreate table hash
@@ -246,9 +258,18 @@ def change_password(c, old_psw, new_psw):
         hashed = bcrypt.hashpw(new_psw.encode("utf-8"), bcrypt.gensalt())
         hashed = hashed.decode("utf-8")
         c.execute(f"INSERT INTO hash VALUES (\"{hashed}\")")
-
-        # TODO: re-encrypt all entries
-
+        # Get the content of entry table
+        c.execute(f"SELECT * FROM {tb}")
+        to_re_encrypt = c.fetchall()
+        # Delete table
+        delete_table(c, tb)
+        # Recreate table
+        create_main_table(c, tb)
+        # Re-encrypt all entries and fill table
+        for i in to_re_encrypt:
+            # Decrypt only, add_entry() will do the encrypting
+            ent = decrypt(old_psw, i[2])
+            add_entry(c, tb, i[0], new_psw, ent, i[1])
     else:
         print("Invalid password.")
 
@@ -326,7 +347,7 @@ if __name__ == "__main__":
                 new_password = getpass.getpass("New Password:")
                 re_check = getpass.getpass("New Password again:")
                 if re_check == new_password:
-                    change_password(cr, password, new_password)
+                    change_password(cr, password, new_password, table)
                     print("Password changed.")
                     sys.exit(0)
                 else:
@@ -343,8 +364,12 @@ if __name__ == "__main__":
 
         # Get date and time to store in database
         datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        # add_entry(cr, table, datetime, password, "Dolor sit amet?", "dolor")
+        # add_entry(cr, table, datetime, password, "Lorem ipsum!", "lorem")
         print(all_entry_names(cr, table))
+        cr.execute(f"SELECT * FROM {table}")
+        # print(cr.fetchall())
+        for item in cr.fetchall():
+            print(decrypt(password, item[2]))
         # print(single_entry(cr, table, "2018-02-02 10:33:27", password))
         # delete_entry(cr, table, "2018-02-02 10:32:59")
         # delete_table(cr, table)
