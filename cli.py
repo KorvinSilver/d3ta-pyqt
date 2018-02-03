@@ -23,6 +23,7 @@ import argparse
 import bcrypt
 import getpass
 import os
+import shutil
 import sqlite3
 import sys
 import time
@@ -339,6 +340,16 @@ if __name__ == "__main__":
 
     # Change password and exit
     if args.change_pass:
+        # ask to create backup and ask for confirmation
+        print(f"Make sure you have a backup of '{database}' before "
+              f"continuing.")
+        make_backup = input("Create one now? (Y/n) ")
+        if make_backup not in ("n", "N"):
+            shutil.copyfile(database, database + ".bak")
+            print(f"'{database}.bak' created.")
+        ready = input("Ready to continue? (y/N) ")
+        if ready not in ("y", "Y"):
+            sys.exit(0)
         # open database
         with open_database(database) as cr:
             password = getpass.getpass("Old Password:")
@@ -347,6 +358,8 @@ if __name__ == "__main__":
                 new_password = getpass.getpass("New Password:")
                 re_check = getpass.getpass("New Password again:")
                 if re_check == new_password:
+                    print("Changing password, re-encrypting all entries.\n"
+                          "This could take a while...")
                     change_password(cr, password, new_password, table)
                     print("Password changed.")
                     sys.exit(0)
