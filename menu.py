@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Project: urwid_examples
+Project: D3TA (Dear Diary, Don't Tell Anyone)
 
 Copyright 2018, Korvin F. Ezüst
 
@@ -37,14 +37,13 @@ option_new_entry = "New entry..."
 option_view_edit = "View/Edit..."
 submenu_options = [option_back, option_view_edit, option_delete]
 
+
 # TODO: handle each option_ as needed
-# TODO: make the top menu persistent
 
 
-def leave(button, item):
+def option_handler(button, item):
     """
-    Exit program
-    TODO: only exit with option_exit
+    # TODO: handle each option as needed
 
     :param button: button clicked
     :type button: urwid.Button
@@ -52,8 +51,7 @@ def leave(button, item):
     :type item: str
     """
     global selected_item, option_new_entry, option_exit, option_delete_all
-    if item in (option_new_entry, option_exit, option_delete_all, ""):
-        raise urwid.ExitMainLoop
+    global option_back, option_view_edit, option_delete
     selected_item = item
     raise urwid.ExitMainLoop
 
@@ -72,7 +70,10 @@ def menu(title, items):
     menu_items = [urwid.Text(title), urwid.Divider()]
     for i in items:
         button = urwid.Button(i)
-        urwid.connect_signal(button, "click", leave, i)
+        if i == "":
+            pass
+        else:
+            urwid.connect_signal(button, "click", option_handler, i)
         menu_items.append(urwid.AttrMap(button, None, focus_map="reversed"))
     return urwid.SimpleListWalker(menu_items)
 
@@ -108,9 +109,18 @@ def loop(title, items):
     urwid.MainLoop(overlay, palette).run()
 
 
-ships = ["New entry...", "Exit", "", "Andromeda Ascendant", "Deep Space 9",
-         "Babylon 5", "Event Horizon", "", "", "Delete all..."]
-loop("Ships", ships)
+def run(title, items):
+    global option_new_entry, option_exit, option_delete_all, selected_item
+    items = [option_new_entry, option_exit, ""] + items
+    items += ["", "", option_delete_all]
+    while selected_item != option_exit:
+        loop(title, items)
+        if selected_item not in (
+                "", option_new_entry, option_exit, option_delete_all):
+            loop(selected_item, submenu_options)
 
-if selected_item != "":
-    loop(selected_item, submenu_options)
+
+if __name__ == "__main__":
+    ships = ["Andromeda Ascendant", "Deep Space 9", "Babylon 5",
+             "Event Horizon"]
+    run("Ships", ships)
