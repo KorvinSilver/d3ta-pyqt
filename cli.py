@@ -23,8 +23,6 @@ import argparse
 import bcrypt
 import getpass
 import os
-import urwid
-import urwid.curses_display
 import shutil
 import sqlite3
 import sys
@@ -277,36 +275,14 @@ def change_password(c, old_psw, new_psw, tb):
         print("Invalid password.")
 
 
-def input_entry():
-    ui = urwid.curses_display.Screen()
-    ent = ""
+def datetime():
+    """
+    Returns the current date and time formatted like "2018-01-02 12:34:56"
 
-    def run():
-        nonlocal ui
-        nonlocal ent
-
-        cols, rows = ui.get_cols_rows()
-        input_ = urwid.Edit("Input entry (press ESC to save and exit):\n\n")
-        fill = urwid.Filler(input_)
-
-        while True:
-            canvas = fill.render((cols, rows), focus=True)
-            ui.draw_screen((cols, rows), canvas)
-
-            inp = ui.get_input()
-            for i in inp:
-                if i == "window resize":
-                    cols, rows = ui.get_cols_rows()
-                    continue
-                if i == "esc":
-                    ent = input_.edit_text
-                    return
-                if fill.selectable():
-                    fill.keypress((cols, rows), i)
-
-    ui.run_wrapper(run)
-    print(ent)
-    return ent
+    :return: formatted date and time
+    :rtype: str
+    """
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
 
 if __name__ == "__main__":
@@ -409,16 +385,12 @@ if __name__ == "__main__":
             print("Invalid password.")
             sys.exit(1)
 
-        # Get date and time to store in database
-        datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        # hint = input("Enter visible hint if you want any and press Enter:\n")
-        # entry = input_entry()
-        # add_entry(cr, table, datetime, password, entry, hint)
-        print(all_entry_names(cr, table))
-        cr.execute(f"SELECT * FROM {table}")
-        # print(cr.fetchall())
-        for item in cr.fetchall():
-            print(decrypt(password, item[2]))
+        # hint = ""
+        # entry = ""
+        # add_entry(cr, table, datetime(), password, entry, hint)
+        for item in all_entry_names(cr, table):
+            entry = single_entry(cr, table, item[0], password)
+            print(item, "\n", entry, "\n")
         # print(single_entry(cr, table, "2018-02-02 10:33:27", password))
         # delete_entry(cr, table, "2018-02-02 10:32:59")
         # delete_table(cr, table)
