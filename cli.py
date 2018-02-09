@@ -35,7 +35,7 @@ from d3lib.aes import *
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
 __license__ = "Apache 2.0"
-__version__ = "0.1a"
+__version__ = "0.9"
 __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
