@@ -3,7 +3,7 @@
 
 """
 Project: D3TA (Dear Diary, Don't Tell Anyone)
-Module: d3lib
+Package: d3lib
 
 This is a modified version of the Urwid example lazy text editor created by
 Ian Ward. For the original, visit

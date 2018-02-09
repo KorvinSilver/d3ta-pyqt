@@ -3,7 +3,7 @@
 
 """
 Project: D3TA (Dear Diary, Don't Tell Anyone)
-Module: d3lib
+Package: d3lib
 
 Based on https://stackoverflow.com/a/44212550
 
