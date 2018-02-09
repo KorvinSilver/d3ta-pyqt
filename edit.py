@@ -4,10 +4,9 @@
 """
 Project: D3TA (Dear Diary, Don't Tell Anyone)
 
-Modified by Korvin F. Ezüst, 2018
-
 Urwid example lazy text editor suitable for tabbed and format=flowed text
     Copyright (C) 2004-2009  Ian Ward
+    Modified by Korvin F. Ezüst on 2018-02-09
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -23,10 +22,18 @@ Urwid example lazy text editor suitable for tabbed and format=flowed text
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Urwid web site: http://excess.org/urwid/
+Urwid web site: http://urwid.org
 """
 
 import urwid
+
+__authors__ = ["Ian Ward", "Korvin F. Ezüst"]
+__copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
+__license__ = "GNU Lesser General Public License 2.1"
+__version__ = "1.0"
+__maintainer__ = "Korvin F. Ezüst"
+__email__ = "dev@korvin.eu"
+__status__ = "Finished"
 
 new_text = ""
 
