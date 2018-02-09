@@ -3,37 +3,37 @@
 
 """
 Project: D3TA (Dear Diary, Don't Tell Anyone)
+Module: d3lib
 
-Urwid example lazy text editor suitable for tabbed and format=flowed text
-    Copyright (C) 2004-2009  Ian Ward
-    Modified by Korvin F. Ezüst on 2018-02-09
+This is a modified version of the Urwid example lazy text editor created by
+Ian Ward. For the original, visit
+https://github.com/urwid/urwid/blob/master/examples/edit.py
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+Copyright (C) 2018  Korvin F. Ezüst
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+This module is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+This module is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-Urwid web site: http://urwid.org
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import urwid
 
 __authors__ = ["Ian Ward", "Korvin F. Ezüst"]
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
-__license__ = "GNU Lesser General Public License 2.1"
+__license__ = "GNU Lesser General Public License 3.0"
 __version__ = "1.0"
 __maintainer__ = "Korvin F. Ezüst"
 __email__ = "dev@korvin.eu"
-__status__ = "Finished"
+__status__ = "Working"
 
 new_text = ""
 
@@ -253,6 +253,6 @@ def main(txt):
 
 
 if __name__ == "__main__":
-    text = "Some string here\nSecond line\nThird line\nAnd so on and so on..."
+    text = "Hello\nمرحبا\nਸਤ ਸ੍ਰੀ ਅਕਾਲ\nสวัสดี\n你好\nこんにちは"
     main(text)
     print(new_text)
