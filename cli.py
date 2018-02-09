@@ -71,9 +71,8 @@ def open_database(db):
         c.fetchone()
         yield c
     except sqlite3.DatabaseError:
-        print(f"'{db}' is not a database or you don't have the necessary "
-              f"permissions.")
-        sys.exit(2)
+        sys.exit(f"'{db}' is not a database or you don't have the necessary "
+                 f"permissions.")
     finally:
         conn.commit()
         c.close()
@@ -125,8 +124,7 @@ def create_database(db, tb, psw):
         c.close()
         conn.close()
     else:
-        print(f"'{db}' exists.")
-        sys.exit(1)
+        sys.exit(f"'{db}' exists.")
 
 
 def add_entry(c, tb, dt, psw, ent, ht=""):
@@ -154,7 +152,7 @@ def add_entry(c, tb, dt, psw, ent, ht=""):
         # Store datetime, hint and encrypted entry
         c.execute(f"INSERT INTO {tb} VALUES ('{dt}', '{ht}', '{ent}')")
     else:
-        print(f"Entry with {dt} already exists.")
+        sys.exit(f"Entry with {dt} already exists.")
 
 
 def single_entry(c, tb, dt, psw):
@@ -273,7 +271,7 @@ def change_password(c, old_psw, new_psw, tb):
             ent = decrypt(old_psw, i[2])
             add_entry(c, tb, i[0], new_psw, ent, i[1])
     else:
-        print("Invalid password.")
+        sys.exit("Invalid password.")
 
 
 def datetime():
@@ -487,10 +485,11 @@ if __name__ == "__main__":
     nd = "--new-diary"
     # database - positional argument
     base = "diary"
+    program_name = "D3TA (Dear Diary, Don't Tell Anyone)"
 
     # Set usage message
     message = f"%(prog)s [-h] [{cp} | {nd}] {base}"
-    parser = argparse.ArgumentParser(usage=message)
+    parser = argparse.ArgumentParser(usage=message, description=program_name)
     parser.add_argument(base, help=f"[path +] filename to your {base}")
 
     # Set custom attribute names for optional arguments
@@ -504,18 +503,15 @@ if __name__ == "__main__":
 
     # Exit if both optional arguments are present
     if args.new_database and args.change_pass:
-        parser.print_help()
-        sys.exit(4)
+        sys.exit(parser.print_help())
 
     # Exit if database doesn't exist and not trying to create new
     if not os.path.isfile(database) and not args.new_database:
-        print(f"'{database}' doesn't exist.")
-        sys.exit(1)
+        sys.exit(f"'{database}' doesn't exist.")
 
     # Exit if trying to create new database but the path exists
     if os.path.exists(database) and args.new_database:
-        print(f"'{database}' already exists.")
-        sys.exit(1)
+        sys.exit(f"'{database}' already exists.")
 
     # Create new database and exit
     if args.new_database:
@@ -525,20 +521,16 @@ if __name__ == "__main__":
             re_check = getpass.getpass("Password again:")
             if password == re_check:
                 create_database(database, base, password)
-                print(f"'{database}' created.")
-                sys.exit(0)
+                sys.exit(f"'{database}' created.")
             else:
-                print("Passwords don't match.")
-                sys.exit(1)
+                sys.exit("Passwords don't match.")
         except sqlite3.OperationalError:
-            print(f"Unable to create '{database}'.\n"
-                  f"Check path and permissions.")
-            sys.exit(1)
+            sys.exit(f"Unable to create '{database}'.\n"
+                     f"Check path and permissions.")
 
     # Check permissions of database
     if not (os.access(database, os.R_OK) or os.access(database, os.W_OK)):
-        print("You don't have the necessary permissions.")
-        sys.exit(1)
+        sys.exit("You don't have the necessary permissions.")
 
     table = base
 
@@ -553,7 +545,7 @@ if __name__ == "__main__":
             print(f"'{database}.bak' created.")
         ready = input("Ready to continue? (y/N) ")
         if ready not in ("y", "Y"):
-            sys.exit(0)
+            sys.exit()
         # open database
         with open_database(database) as cr:
             password = getpass.getpass("Old Password:")
@@ -565,18 +557,15 @@ if __name__ == "__main__":
                     print("Changing password, re-encrypting all entries.\n"
                           "This could take a while...")
                     change_password(cr, password, new_password, table)
-                    print("Password changed.")
-                    sys.exit(0)
+                    sys.exit("Password changed.")
                 else:
-                    print("Passwords don't match.")
-                    sys.exit(1)
+                    sys.exit("Passwords don't match.")
             else:
-                print("Invalid password.")
+                sys.exit("Invalid password.")
     # Open database
     with open_database(database) as cr:
         password = getpass.getpass()
         if not valid_password(cr, password):
-            print("Invalid password.")
-            sys.exit(1)
+            sys.exit("Invalid password.")
 
         run(cr, table, password)
