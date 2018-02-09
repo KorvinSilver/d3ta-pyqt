@@ -20,6 +20,7 @@ limitations under the License.
 """
 
 import urwid
+import edit
 
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
@@ -29,6 +30,7 @@ __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
 selected_item = ""
+text_entry = ""
 option_back = "Back..."
 option_delete = "Delete..."
 option_delete_all = "Delete all..."
@@ -43,16 +45,24 @@ submenu_options = [option_back, option_view_edit, option_delete]
 
 def option_handler(button, item):
     """
-    # TODO: handle each option as needed
+    Breaks the current loop, opens new widget or exits the program
 
     :param button: button clicked
     :type button: urwid.Button
     :param item: item chosen
     :type item: str
     """
-    global selected_item, option_new_entry, option_exit, option_delete_all
-    global option_back, option_view_edit, option_delete
+    # set global so the program will know when to exit completely or what title
+    # to use in next loop
+    global selected_item
+    global option_new_entry, option_delete_all
+    global option_view_edit, option_delete
+    global text_entry
     selected_item = item
+    if item == option_new_entry:
+        text_entry = edit.main(text_entry)
+    if item == option_view_edit:
+        text_entry = edit.main(text_entry)
     raise urwid.ExitMainLoop
 
 
@@ -67,15 +77,15 @@ def menu(title, items):
     :return: list of menu items as buttons
     :rtype: urwid.SimpleListWalker
     """
-    menu_items = [urwid.Text(title), urwid.Divider()]
+    body = [urwid.Text(title), urwid.Divider()]
     for i in items:
         button = urwid.Button(i)
         if i == "":
             pass
         else:
             urwid.connect_signal(button, "click", option_handler, i)
-        menu_items.append(urwid.AttrMap(button, None, focus_map="reversed"))
-    return urwid.SimpleListWalker(menu_items)
+        body.append(urwid.AttrMap(button, None, focus_map="reversed"))
+    return urwid.SimpleListWalker(body)
 
 
 def make_overlay(body):
