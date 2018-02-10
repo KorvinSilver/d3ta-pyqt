@@ -133,6 +133,7 @@ def option_handler(button, tuple_):
         # recreate table in database
         delete_table(c, tb)
         create_main_table(c, tb)
+        selected_item = ""
     # No confirmation
     elif item == option_no:
         raise urwid.ExitMainLoop
