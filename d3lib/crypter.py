@@ -27,7 +27,7 @@ from Crypto import Random
 
 __authors__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
-__license__ = "GNU Lesser General Public License 3.0"
+__license__ = "Apache 2.0"
 __version__ = "1.0"
 __email__ = "dev@korvin.eu"
 __status__ = "Production"
