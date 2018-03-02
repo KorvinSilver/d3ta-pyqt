@@ -5,7 +5,7 @@
 <strong>This program is Work In Progress.</strong>
 
 Store your diary entries encrypted with this program.<br>
-Currently it works only in the command line. The GUI written in Kivy coming sometime in the near future.
+Currently it works only in the command line. The GUI written in PySide2 coming sometime in the near future.
 
 Requirements:
 + Python 3.6 or newer
