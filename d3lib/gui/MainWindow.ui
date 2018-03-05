@@ -220,46 +220,46 @@
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
-    <addaction name="actionNew"/>
-    <addaction name="actionOpen"/>
+    <addaction name="newAction"/>
+    <addaction name="openAction"/>
     <addaction name="separator"/>
-    <addaction name="actionChange_Pass"/>
+    <addaction name="changePassAction"/>
     <addaction name="separator"/>
-    <addaction name="actionExit"/>
+    <addaction name="exitAction"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionLicense"/>
-    <addaction name="actionAbout_D3TA"/>
-    <addaction name="actionAbout_PySide2"/>
+    <addaction name="licenseAction"/>
+    <addaction name="aboutD3TAAction"/>
+    <addaction name="aboutPySide2Action"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionNew">
+  <action name="newAction">
    <property name="text">
     <string>&amp;New Diary</string>
    </property>
   </action>
-  <action name="actionOpen">
+  <action name="openAction">
    <property name="text">
     <string>&amp;Open Diary</string>
    </property>
   </action>
-  <action name="actionExit">
+  <action name="exitAction">
    <property name="text">
     <string>&amp;Exit</string>
    </property>
   </action>
-  <action name="actionAbout_D3TA">
+  <action name="aboutD3TAAction">
    <property name="text">
     <string>&amp;About D3TA</string>
    </property>
   </action>
-  <action name="actionAbout_PySide2">
+  <action name="aboutPySide2Action">
    <property name="text">
     <string>About &amp;PySide2</string>
    </property>
@@ -274,12 +274,12 @@
     <string>PySide2 License</string>
    </property>
   </action>
-  <action name="actionLicense">
+  <action name="licenseAction">
    <property name="text">
     <string>&amp;License</string>
    </property>
   </action>
-  <action name="actionChange_Pass">
+  <action name="changePassAction">
    <property name="text">
     <string>&amp;Change Password</string>
    </property>
