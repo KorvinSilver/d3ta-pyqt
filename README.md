@@ -13,9 +13,8 @@ Requirements:
 + pycrypto 2.x (tested on 2.6.1)
 + urwid 2.x (tested on 2.0.1)
 
-Additional GUI requirements (not applicable yet):
-+ cython 0.27.3
-+ kivy 10.0.1
+Additional GUI requirements:
++ pyside2
 
 ### Usage:
 ```
