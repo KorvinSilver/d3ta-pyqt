@@ -64,7 +64,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             """Choose a file"""
             database, _ = QtWidgets.QFileDialog.getOpenFileName()
             print(database)
-            
+
             if database != "":
                 with open_database(database) as cr:
                     # noinspection PyCallByClass
@@ -76,7 +76,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     if flag:
                         if valid_password(cr, password):
                             table = table_name()
-                            print(all_entry_names(cr, table))
+                            for entry, hint in all_entry_names(cr, table):
+                                if hint != "":
+                                    self.listWidget.addItem(
+                                        f"{entry} -- {hint}")
+                                else:
+                                    self.listWidget.addItem(f"{entry}")
                         else:
                             msg = QtWidgets.QMessageBox()
                             msg.setText("Invalid password!")
