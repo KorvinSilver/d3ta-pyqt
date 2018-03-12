@@ -27,6 +27,7 @@ from d3lib.gui.AboutDialog import Ui_Dialog
 from d3lib.dbtools import (
     all_entry_names,
     open_database,
+    valid_password
 )
 from PySide2 import QtCore, QtGui, QtWidgets
 
@@ -71,9 +72,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     "Password",
                     "Password:",
                     QtWidgets.QLineEdit.Password)
-                print(password, flag)
-                table = table_name()
-                print(all_entry_names(cr, table))
+                if flag:
+                    if valid_password(cr, password):
+                        table = table_name()
+                        print(all_entry_names(cr, table))
+                    else:
+                        msg = QtWidgets.QMessageBox()
+                        msg.setText("Invalid password!")
+                        msg.exec_()
 
         # Connect buttons and menu items
         self.exitButton.clicked.connect(self.close)
