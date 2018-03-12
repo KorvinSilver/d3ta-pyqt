@@ -39,14 +39,28 @@ __version__ = "0.9"
 __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
+
+def table_name():
+    """
+    Return main table name. Using function to let other scripts know it, too
+
+    :return: main table name
+    :rtype: str
+    """
+    return "diary"
+
+
 if __name__ == "__main__":
     # Set variables with cli arguments, easier to modify later this way
     # change password - optional argument
     cp = "--change-password"
     # new archive - optional argument
-    nd = "--new-diary"
+    nd = "--new-database"
     # database - positional argument
-    base = "diary"
+    base = "database"
+    # Set the main table name inside the database
+    table = table_name()
+    # make base name available to other scripts
     program_name = "D3TA (Dear Diary, Don't Tell Anyone)"
 
     # Set usage message
@@ -80,9 +94,9 @@ if __name__ == "__main__":
         try:
             # ask password twice
             password = getpass.getpass()
-            re_check = getpass.getpass("Password again:")
+            re_check = getpass.getpass("Password again: ")
             if password == re_check:
-                create_database(database, base, password)
+                create_database(database, table, password)
                 sys.exit(f"'{database}' created.")
             else:
                 sys.exit("Passwords don't match.")
@@ -93,8 +107,6 @@ if __name__ == "__main__":
     # Check permissions of database
     if not (os.access(database, os.R_OK) or os.access(database, os.W_OK)):
         sys.exit("You don't have the necessary permissions.")
-
-    table = base
 
     # Change password and exit
     if args.change_pass:
@@ -110,11 +122,11 @@ if __name__ == "__main__":
             sys.exit()
         # open database
         with open_database(database) as cr:
-            password = getpass.getpass("Old Password:")
+            password = getpass.getpass("Old Password: ")
             if valid_password(cr, password):
                 # ask new password twice
-                new_password = getpass.getpass("New Password:")
-                re_check = getpass.getpass("New Password again:")
+                new_password = getpass.getpass("New Password: ")
+                re_check = getpass.getpass("New Password again: ")
                 if re_check == new_password:
                     print("Changing password, re-encrypting all entries.\n"
                           "This could take a while...")
