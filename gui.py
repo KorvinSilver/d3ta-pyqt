@@ -56,6 +56,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Connect buttons and menu items
         self.exitButton.clicked.connect(self.close)
         self.exitAction.triggered.connect(self.close)
+
         self.licenseAction.triggered.connect(show_license)
 
 
