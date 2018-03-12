@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Mon Mar 12 15:29:07 2018
+# Created: Mon Mar 12 16:42:02 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,14 +32,6 @@ class Ui_MainWindow(object):
         self.deleteAllButton.setFlat(True)
         self.deleteAllButton.setObjectName("deleteAllButton")
         self.gridLayout.addWidget(self.deleteAllButton, 3, 1, 1, 1)
-        self.listView = QtWidgets.QListView(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.listView.sizePolicy().hasHeightForWidth())
-        self.listView.setSizePolicy(sizePolicy)
-        self.listView.setObjectName("listView")
-        self.gridLayout.addWidget(self.listView, 1, 0, 2, 2)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout.addItem(spacerItem, 3, 2, 1, 1)
         self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
@@ -68,6 +60,22 @@ class Ui_MainWindow(object):
         self.newEntryButton.setFlat(True)
         self.newEntryButton.setObjectName("newEntryButton")
         self.gridLayout.addWidget(self.newEntryButton, 1, 2, 1, 1)
+        self.listView = QtWidgets.QListView(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.listView.sizePolicy().hasHeightForWidth())
+        self.listView.setSizePolicy(sizePolicy)
+        self.listView.setObjectName("listView")
+        self.gridLayout.addWidget(self.listView, 2, 0, 1, 2)
+        self.newButton = QtWidgets.QPushButton(self.centralwidget)
+        self.newButton.setFlat(True)
+        self.newButton.setObjectName("newButton")
+        self.gridLayout.addWidget(self.newButton, 1, 0, 1, 1)
+        self.openButton = QtWidgets.QPushButton(self.centralwidget)
+        self.openButton.setFlat(True)
+        self.openButton.setObjectName("openButton")
+        self.gridLayout.addWidget(self.openButton, 1, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout)
         self.exitButton = QtWidgets.QDialogButtonBox(self.centralwidget)
         self.exitButton.setStandardButtons(QtWidgets.QDialogButtonBox.Close)
@@ -124,6 +132,8 @@ class Ui_MainWindow(object):
         self.deleteAllButton.setText(QtWidgets.QApplication.translate("MainWindow", "Delete All", None, -1))
         self.saveButton.setText(QtWidgets.QApplication.translate("MainWindow", "Save", None, -1))
         self.newEntryButton.setText(QtWidgets.QApplication.translate("MainWindow", "New Entry", None, -1))
+        self.newButton.setText(QtWidgets.QApplication.translate("MainWindow", "New", None, -1))
+        self.openButton.setText(QtWidgets.QApplication.translate("MainWindow", "Open", None, -1))
         self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "Fi&le", None, -1))
         self.menuHelp.setTitle(QtWidgets.QApplication.translate("MainWindow", "Help", None, -1))
         self.newAction.setText(QtWidgets.QApplication.translate("MainWindow", "&New Diary", None, -1))
