@@ -20,9 +20,14 @@ limitations under the License.
 """
 
 import sys
+from cli import table_name
 from d3lib.gui import license_text
 from d3lib.gui.MainWindow import Ui_MainWindow
 from d3lib.gui.AboutDialog import Ui_Dialog
+from d3lib.dbtools import (
+    all_entry_names,
+    open_database,
+)
 from PySide2 import QtCore, QtGui, QtWidgets
 
 __author__ = "Korvin F. Ezüst"
@@ -53,10 +58,28 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             dialog = LicenseText()
             dialog.exec_()
 
+        # noinspection PyArgumentList
+        def open_new():
+            """Choose a file"""
+            database, _ = QtWidgets.QFileDialog.getOpenFileName()
+            print(database)
+
+            with open_database(database) as cr:
+                # noinspection PyCallByClass
+                password, flag = QtWidgets.QInputDialog.getText(
+                    self,
+                    "Password",
+                    "Password:",
+                    QtWidgets.QLineEdit.Password)
+                print(password, flag)
+                table = table_name()
+                print(all_entry_names(cr, table))
+
         # Connect buttons and menu items
         self.exitButton.clicked.connect(self.close)
         self.exitAction.triggered.connect(self.close)
-
+        self.openAction.triggered.connect(open_new)
+        self.openButton.clicked.connect(open_new)
         self.licenseAction.triggered.connect(show_license)
 
 
