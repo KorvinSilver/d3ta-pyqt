@@ -45,6 +45,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.size(),
             QtGui.qApp.desktop().availableGeometry()))
 
+        # Maximize window
+        self.setWindowState(QtCore.Qt.WindowMaximized)
+
         def show_license():
             """Open a dialog window with the license"""
             dialog = LicenseText()
