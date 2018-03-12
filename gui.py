@@ -64,22 +64,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             """Choose a file"""
             database, _ = QtWidgets.QFileDialog.getOpenFileName()
             print(database)
-
-            with open_database(database) as cr:
-                # noinspection PyCallByClass
-                password, flag = QtWidgets.QInputDialog.getText(
-                    self,
-                    "Password",
-                    "Password:",
-                    QtWidgets.QLineEdit.Password)
-                if flag:
-                    if valid_password(cr, password):
-                        table = table_name()
-                        print(all_entry_names(cr, table))
-                    else:
-                        msg = QtWidgets.QMessageBox()
-                        msg.setText("Invalid password!")
-                        msg.exec_()
+            
+            if database != "":
+                with open_database(database) as cr:
+                    # noinspection PyCallByClass
+                    password, flag = QtWidgets.QInputDialog.getText(
+                        self,
+                        "Password",
+                        "Password:",
+                        QtWidgets.QLineEdit.Password)
+                    if flag:
+                        if valid_password(cr, password):
+                            table = table_name()
+                            print(all_entry_names(cr, table))
+                        else:
+                            msg = QtWidgets.QMessageBox()
+                            msg.setText("Invalid password!")
+                            msg.exec_()
 
         # Connect buttons and menu items
         self.exitButton.clicked.connect(self.close)
