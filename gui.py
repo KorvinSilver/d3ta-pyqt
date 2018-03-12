@@ -27,7 +27,8 @@ from d3lib.gui.AboutDialog import Ui_Dialog
 from d3lib.dbtools import (
     all_entry_names,
     open_database,
-    valid_password
+    valid_password,
+    single_entry
 )
 from PySide2 import QtCore, QtGui, QtWidgets
 
@@ -59,11 +60,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             dialog = LicenseText()
             dialog.exec_()
 
+        entry_index_list = []
+        password = ""
+        database = ""
+        table = ""
+
         # noinspection PyArgumentList
         def open_new():
             """Choose a file"""
+            nonlocal database, table, password, entry_index_list
             database, _ = QtWidgets.QFileDialog.getOpenFileName()
-            print(database)
 
             if database != "":
                 with open_database(database) as cr:
@@ -82,17 +88,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         f"{entry} -- {hint}")
                                 else:
                                     self.listWidget.addItem(f"{entry}")
+                                entry_index_list.append(entry)
                         else:
                             msg = QtWidgets.QMessageBox()
                             msg.setText("Invalid password!")
                             msg.exec_()
 
         # Connect buttons and menu items
-        self.exitButton.clicked.connect(self.close)
         self.exitAction.triggered.connect(self.close)
+        self.exitButton.clicked.connect(self.close)
+
         self.openAction.triggered.connect(open_new)
         self.openButton.clicked.connect(open_new)
+
         self.licenseAction.triggered.connect(show_license)
+
+        # Show entry
+        def show_entry():
+            """Display text belonging to selected entry"""
+            nonlocal database, table, password, entry_index_list
+            entry = self.listWidget.selectedIndexes()[0]
+            entry = entry.row()
+            date = entry_index_list[entry]
+
+            with open_database(database) as cr:
+                entry = single_entry(cr, table, date, password)
+                self.textEdit.setText(str(entry))
+
+        self.listWidget.itemSelectionChanged.connect(show_entry)
 
 
 class LicenseText(QtWidgets.QDialog, Ui_Dialog):
