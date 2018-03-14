@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Mon Mar 12 19:13:22 2018
+# Created: Wed Mar 14 18:30:07 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -15,7 +15,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         MainWindow.setMinimumSize(QtCore.QSize(800, 600))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../../img/icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("d3lib/gui/icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -106,6 +106,8 @@ class Ui_MainWindow(object):
         self.licenseAction.setObjectName("licenseAction")
         self.changePassAction = QtWidgets.QAction(MainWindow)
         self.changePassAction.setObjectName("changePassAction")
+        self.licensePySide2Action = QtWidgets.QAction(MainWindow)
+        self.licensePySide2Action.setObjectName("licensePySide2Action")
         self.menuFile.addAction(self.newAction)
         self.menuFile.addAction(self.openAction)
         self.menuFile.addSeparator()
@@ -114,6 +116,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.exitAction)
         self.menuHelp.addAction(self.licenseAction)
         self.menuHelp.addAction(self.aboutD3TAAction)
+        self.menuHelp.addAction(self.licensePySide2Action)
         self.menuHelp.addAction(self.aboutPySide2Action)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
@@ -138,6 +141,7 @@ class Ui_MainWindow(object):
         self.aboutPySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "About &PySide2", None, -1))
         self.actionD3TA_License.setText(QtWidgets.QApplication.translate("MainWindow", "D3TA License", None, -1))
         self.actionPySide2_License.setText(QtWidgets.QApplication.translate("MainWindow", "PySide2 License", None, -1))
-        self.licenseAction.setText(QtWidgets.QApplication.translate("MainWindow", "&License", None, -1))
+        self.licenseAction.setText(QtWidgets.QApplication.translate("MainWindow", "&License D3TA", None, -1))
         self.changePassAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Change Password", None, -1))
+        self.licensePySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "License PySide 2", None, -1))
 

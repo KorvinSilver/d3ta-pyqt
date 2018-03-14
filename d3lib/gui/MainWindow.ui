@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../img/icon.svg</normaloff>../../img/icon.svg</iconset>
+    <normaloff>icon.svg</normaloff>icon.svg</iconset>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -165,6 +165,7 @@
     </property>
     <addaction name="licenseAction"/>
     <addaction name="aboutD3TAAction"/>
+    <addaction name="licensePySide2Action"/>
     <addaction name="aboutPySide2Action"/>
    </widget>
    <addaction name="menuFile"/>
@@ -208,12 +209,17 @@
   </action>
   <action name="licenseAction">
    <property name="text">
-    <string>&amp;License</string>
+    <string>&amp;License D3TA</string>
    </property>
   </action>
   <action name="changePassAction">
    <property name="text">
     <string>&amp;Change Password</string>
+   </property>
+  </action>
+  <action name="licensePySide2Action">
+   <property name="text">
+    <string>License PySide 2</string>
    </property>
   </action>
  </widget>
