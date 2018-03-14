@@ -194,7 +194,7 @@
   </action>
   <action name="aboutPySide2Action">
    <property name="text">
-    <string>About &amp;PySide2</string>
+    <string>&amp;About PySide2</string>
    </property>
   </action>
   <action name="actionD3TA_License">
@@ -219,7 +219,7 @@
   </action>
   <action name="licensePySide2Action">
    <property name="text">
-    <string>License PySide 2</string>
+    <string>&amp;License PySide2</string>
    </property>
   </action>
  </widget>

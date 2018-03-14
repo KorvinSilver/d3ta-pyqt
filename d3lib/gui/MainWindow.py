@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Mar 14 18:30:07 2018
+# Created: Wed Mar 14 20:15:35 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -138,10 +138,10 @@ class Ui_MainWindow(object):
         self.openAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Open Diary", None, -1))
         self.exitAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Exit", None, -1))
         self.aboutD3TAAction.setText(QtWidgets.QApplication.translate("MainWindow", "&About D3TA", None, -1))
-        self.aboutPySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "About &PySide2", None, -1))
+        self.aboutPySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "&About PySide2", None, -1))
         self.actionD3TA_License.setText(QtWidgets.QApplication.translate("MainWindow", "D3TA License", None, -1))
         self.actionPySide2_License.setText(QtWidgets.QApplication.translate("MainWindow", "PySide2 License", None, -1))
         self.licenseAction.setText(QtWidgets.QApplication.translate("MainWindow", "&License D3TA", None, -1))
         self.changePassAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Change Password", None, -1))
-        self.licensePySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "License PySide 2", None, -1))
+        self.licensePySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "&License PySide2", None, -1))
 
