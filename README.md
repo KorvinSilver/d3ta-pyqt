@@ -25,7 +25,7 @@ A salted hash generated from the password using [bcrypt](https://github.com/pyca
 The program allows you to create new databases, change their passwords, create new entries, save and modify entries, delete entries and empty databases.
 These functions are accessible both from the command line and from the GUI.
 
-The GUI uses [PySide2](https://wiki.qt.io/PySide2), and the main window and license windows are created with [Qt Designer](https://doc.qt.io/qt-5/qtdesigner-manual.html).
+The CLI uses [urwid](http://urwid.org/index.html), the GUI uses [PySide2](https://wiki.qt.io/PySide2), and the main window and license windows were created with [Qt Designer](https://doc.qt.io/qt-5/qtdesigner-manual.html).
 
 This project is licensed under the [Apache License version 2.0](https://www.apache.org/licenses/LICENSE-2.0).<br>
 PySide2 is licensed under the [GNU Lesser General Public License version 3](https://opensource.org/licenses/lgpl-3.0.html).<br>
