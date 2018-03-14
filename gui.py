@@ -74,6 +74,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         database = ""
         # get table name defined in cli.py
         table = table_name()
+        db_error = "Invalid database or you don't have the necessary " \
+                   "permissions to open it!"
 
         def change_pass():
             """Change password of database entries"""
@@ -345,18 +347,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             # If a file was selected
             if database != "":
-                with open_database(database) as cr:
-                    password_of_opened_db = password
-                    password, flag = password_box("Password", "Password:")
-                    if flag:
-                        if valid_password(cr, password):
-                            refresh_list_widget(
-                                cr, table, entry_date_list, entry_hint_list)
+                try:
+                    # Open database
+                    with open_database(database) as cr:
+                        # store already given password
+                        password_of_opened_db = password
+                        # ask for password
+                        password, flag = password_box("Password", "Password:")
+                        # if Ok is pressed
+                        if flag:
+                            # check if password is valid
+                            if valid_password(cr, password):
+                                # regenerate listWidget
+                                refresh_list_widget(
+                                    cr, table, entry_date_list, entry_hint_list)
+                            # if invalid password
+                            else:
+                                # display message and restore password
+                                msg_box("Invalid password!")
+                                password = password_of_opened_db
                         else:
-                            msg_box("Invalid password!")
+                            # if Cancel is pressed, restore password
                             password = password_of_opened_db
-                    else:
-                        password = password_of_opened_db
+                except sqlite3.DatabaseError:
+                    # Show error message if database can't be opened
+                    msg_box(db_error)
 
         def password_box(title, text):
             """
@@ -388,15 +403,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             :param ehl: entry hint list
             :type ehl: list
             """
+            # Empty lists
             del edl[:]
             del ehl[:]
+            # Clear listWidget and textEdit
             self.listWidget.clear()
             self.textEdit.setText("")
+            # Regenerate listWidget
             for e, h in all_entry_names(c, tb):
                 if h != "":
+                    # add date and hint
                     self.listWidget.addItem(f"{e} -- {h}")
                 else:
+                    # add hint
                     self.listWidget.addItem(f"{e}")
+                # add date and hint to lists
                 edl.append(e)
                 ehl.append(h)
 
@@ -404,16 +425,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             """Save entry to the database"""
             nonlocal database, table, password, entry_date_list
             nonlocal entry_hint_list
+
+            # Don't do anything if there's no database open
             if database == "":
                 return
+            # Don't do anything if listWidget is empty
             if not self.listWidget.selectedIndexes():
                 return
+
+            # Get the selected item's index
             index = self.listWidget.selectedIndexes()[0]
             index = index.row()
+            # Get date and hint from lists based on index
             date = entry_date_list[index]
             hint = entry_hint_list[index]
+            # Get the content of textEdit
             entry = self.textEdit.toPlainText()
 
+            # Delete existing entry, if any, and create new entry
             with open_database(database) as cr:
                 delete_entry(cr, table, date)
                 add_entry(cr, table, date, password, entry, hint)
@@ -421,12 +450,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         def show_entry():
             """Display text belonging to selected entry"""
             nonlocal database, table, password, entry_date_list
+
+            # Don't do anything if listWidget is empty
             if not self.listWidget.selectedIndexes():
                 return
+
+            # Get index of selected item
             index = self.listWidget.selectedIndexes()[0]
             index = index.row()
+            # Get date based on index
             date = entry_date_list[index]
 
+            # Get the text from selected entry and display it in textEdit
             with open_database(database) as cr:
                 entry = single_entry(cr, table, date, password)
                 self.textEdit.setText(entry)
