@@ -21,6 +21,7 @@ limitations under the License.
 
 import os
 import sys
+import sqlite3
 import webbrowser
 from cli import table_name
 from d3lib.cmenu import datetime
@@ -327,9 +328,40 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if select == QtWidgets.QMessageBox.Yes:
                 self.close()
 
+        def new_db():
+            """Create a new database"""
+            nonlocal table
+            # noinspection PyCallByClass
+            name = QtWidgets.QFileDialog.getSaveFileName(
+                self, "Save file", "", ".sqlite3")
+            name = "".join(name)
+            if os.path.isfile(name):
+                msg_box("File already exists!")
+                return
+            psw, flag = password_box("Password", "Password:")
+            if flag:
+                confirm, flag = password_box("Password", "Confirm password:")
+                if flag:
+                    if psw == confirm:
+                        try:
+                            create_database(name, table, "pass")
+                            msg_box(f"Database successfully created:\n{name}")
+                        except sqlite3.OperationalError:
+                            msg_box("Couldn't create new database!")
+                    else:
+                        msg_box("Passwords don't match!")
+                        return
+                else:
+                    return
+            else:
+                return
+
         # Connect buttons, menu items and QListWidget selection
         self.exitAction.triggered.connect(confirm_exit)
         self.exitButton.clicked.connect(confirm_exit)
+
+        self.newButton.clicked.connect(new_db)
+        self.newAction.triggered.connect(new_db)
 
         self.openAction.triggered.connect(open_new)
         self.openButton.clicked.connect(open_new)
