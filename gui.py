@@ -20,24 +20,24 @@ limitations under the License.
 """
 
 import os
-import sys
 import sqlite3
+import sys
 import webbrowser
 from cli import table_name
 from d3lib.cmenu import datetime
-from d3lib.gui import license_text
-from d3lib.gui.MainWindow import Ui_MainWindow
-from d3lib.gui.AboutDialog import Ui_Dialog
 from d3lib.dbtools import (
-    all_entry_names,
-    open_database,
-    valid_password,
-    single_entry,
-    delete_entry,
     add_entry,
+    all_entry_names,
+    change_password,
     create_database,
-    change_password
+    delete_entry,
+    open_database,
+    single_entry,
+    valid_password,
 )
+from d3lib.gui import license_text
+from d3lib.gui.AboutDialog import Ui_Dialog
+from d3lib.gui.MainWindow import Ui_MainWindow
 from PySide2 import QtCore, QtGui, QtWidgets
 
 __author__ = "Korvin F. Ezüst"
@@ -63,31 +63,70 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Maximize window
         self.setWindowState(QtCore.Qt.WindowMaximized)
 
-        def show_license_apache():
-            """Open a dialog window with the Apache 2 license"""
-            dialog = LicenseTextApache()
-            dialog.exec_()
-
-        def show_license_lgpl():
-            """Open a dialog window with the LGPL3 license"""
-            dialog = LicenseTextLGPL()
-            dialog.exec_()
-
+        # Declare variables to hold information
+        # title of each entry - date
         entry_date_list = []
+        # title of each entry - hint, if any
         entry_hint_list = []
+        # password
         password = ""
+        # location of current database
         database = ""
+        # get table name defined in cli.py
         table = table_name()
 
-        def msg_box(text):
-            """
-            Displays a QMessageBox with a given message
-            :param text: message
-            :type text: str
-            """
-            msg = QtWidgets.QMessageBox()
-            msg.setText(text)
-            msg.exec_()
+        def change_pass():
+            """Change password of database entries"""
+            nonlocal database, password, table
+
+            # Don't do anything if there's no database open
+            if database == "":
+                return
+
+            # Ask for password
+            psw, flag = password_box("Change Password", "Current password:")
+
+            # If Ok is pressed
+            if flag:
+                # Check if given password matches the original
+                if psw == password:
+                    # ask for new password if it is
+                    new, flag = password_box("Change Password",
+                                             "New password:")
+                    # leave password change if Cancel is pressed
+                    if not flag:
+                        return
+                    # ask for new password second time
+                    confirm, flag = password_box("Change Password",
+                                                 "Confirm password:")
+                    # leave password change if Cancel is pressed
+                    if not flag:
+                        return
+                    # if new passwords match
+                    if new == confirm:
+                        # change password
+                        with open_database(database) as cr:
+                            change_password(cr, psw, new, table)
+                        # display message of successful change
+                        msg_box("Password changed.")
+                        # clear listWidget and textEdit
+                        # and make database path empty
+                        self.listWidget.clear()
+                        self.textEdit.setText("")
+                        database = ""
+                    else:
+                        # if passwords don't match
+                        # display message and leave password change
+                        msg_box("Passwords don't match!")
+                        return
+                else:
+                    # if given password doesn't match the original
+                    # display message and leave password change
+                    msg_box("Invalid password!")
+                    return
+            else:
+                # leave password change if Cancel is pressed
+                return
 
         def confirm_box(text, info_text, yes_button, no_button):
             """
@@ -112,6 +151,213 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             select = dialog.exec_()
             return select
 
+        def confirm_exit():
+            """Display a confirm exit dialog"""
+            select = confirm_box(
+                "Exit",
+                "Are you sure you want to exit?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.Cancel)
+            if select == QtWidgets.QMessageBox.Yes:
+                self.close()
+
+        def delete():
+            """Delete an entry from the database"""
+            nonlocal database, table, password, entry_date_list
+            nonlocal entry_hint_list
+
+            # Don't do anything if there's no database open
+            if database == "":
+                return
+            # Don't do anything if there's nothing in the listWidget
+            if not self.listWidget.selectedIndexes():
+                return
+
+            # Ask for confirmation
+            select = confirm_box(
+                "Delete Entry",
+                "Do you want to delete entry?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.Cancel)
+
+            if select == QtWidgets.QMessageBox.Yes:
+                # get selected item's index
+                index = self.listWidget.selectedIndexes()[0]
+                index = index.row()
+                # get date from date list based on index
+                date = entry_date_list[index]
+                # clear listWidget and textEdit
+                self.listWidget.clear()
+                self.textEdit.setText("")
+                # delete entry and reload listWidget
+                with open_database(database) as cr:
+                    delete_entry(cr, table, date)
+                    refresh_list_widget(
+                        cr, table, entry_date_list, entry_hint_list)
+
+        def delete_all():
+            """Delete database file and recreate an empty one"""
+            nonlocal database, table, password
+
+            # Don't do anything if there's no database open
+            if database == "":
+                return
+
+            # Ask for confirmation
+            select = confirm_box(
+                "Delete Database",
+                "Do you want to delete database?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.Cancel)
+            if select == QtWidgets.QMessageBox.Yes:
+                # ask for confirmation a second time
+                select = confirm_box(
+                    "Delete Database",
+                    "Are you sure? This cannot be undone.",
+                    QtWidgets.QMessageBox.Yes,
+                    QtWidgets.QMessageBox.Cancel)
+                # delete database file and recreate an empty one
+                if select == QtWidgets.QMessageBox.Yes:
+                    os.remove(database)
+                    create_database(database, table, password)
+                    # clear listWidget and textEdit
+                    self.listWidget.clear()
+                    self.textEdit.setText("")
+
+        def line_input(title, text):
+            """
+            Displays a QInputDialog to ask for user input
+
+            :param title: window title
+            :type title: str
+            :param text: text to be displayed
+            :type text: str
+            :return: user input
+            :rtype: str
+            """
+            # noinspection PyCallByClass
+            return QtWidgets.QInputDialog.getText(self, title, text)
+
+        def msg_box(text):
+            """
+            Displays a QMessageBox with a given message
+            :param text: message
+            :type text: str
+            """
+            msg = QtWidgets.QMessageBox()
+            msg.setText(text)
+            msg.exec_()
+
+        def new_db():
+            """Create a new database"""
+            nonlocal table
+
+            # Ask user to choose where to save the new file
+            # noinspection PyCallByClass
+            name = QtWidgets.QFileDialog.getSaveFileName(
+                self, "Save file", "", ".sqlite3")
+            # name is now a tuple of filename and extension, merge them
+            name = "".join(name)
+
+            # If empty, leave db creation
+            if name == "":
+                return
+
+            # If file already exists, show message and leave db creation
+            if os.path.isfile(name):
+                msg_box("File already exists!")
+                return
+
+            # Ask for password
+            psw, flag = password_box("Password", "Password:")
+            # If Ok is pressed
+            if flag:
+                # ask for confirmation
+                confirm, flag = password_box("Password", "Confirm password:")
+                # if Ok is pressed
+                if flag:
+                    # check if passwords match
+                    if psw == confirm:
+                        try:
+                            # create new database and display message
+                            create_database(name, table, psw)
+                            msg_box(f"Database successfully created:\n{name}")
+                        # if can't be created, display message
+                        except sqlite3.OperationalError:
+                            msg_box("Couldn't create new database!")
+                    else:
+                        # if passwords don't match, display message
+                        msg_box("Passwords don't match!")
+                        return
+                else:
+                    # leave db creation if Cancel is pressed
+                    return
+            else:
+                # leave db creation if Cancel is pressed
+                return
+
+        def new_entry():
+            """Create new entry in the database"""
+            nonlocal database, table, password, entry_date_list
+            nonlocal entry_hint_list
+
+            # Don't do anything if there's no database open
+            if database == "":
+                return
+
+            # Empty lists
+            del entry_date_list[:]
+            del entry_hint_list[:]
+            # Clear listWidget and textEdit
+            self.listWidget.clear()
+            self.textEdit.setText("")
+            # Ask for visible hint, don't check if Ok or Cancel was pressed
+            # noinspection PyCallByClass
+            hint, _ = line_input("Visible hint", "Visible hint:")
+            # Get formatted date from d3lib.cmenu.py
+            date = datetime()
+
+            # Add new entry and regenerate listWidget
+            with open_database(database) as cr:
+                add_entry(cr, table, date, password, "", hint)
+                refresh_list_widget(
+                    cr, table, entry_date_list, entry_hint_list)
+            # Set listWidget's first item as selected
+            self.listWidget.setCurrentRow(0)
+
+        def open_browser_d3ta():
+            """Open the D3TA project's page in the default web browser"""
+            webbrowser.open_new_tab("https://gitlab.com/KorvinSilver/d3ta")
+
+        def open_browser_pyside2():
+            """Open the PySide2 project's page in the default web browser"""
+            webbrowser.open_new_tab("https://wiki.qt.io/PySide2")
+
+        def open_new():
+            """Choose a file"""
+            nonlocal database, table, password, entry_date_list
+            nonlocal entry_hint_list
+
+            # Ask user to select a file,
+            # don't check if Open or Cancel was pressed
+            # noinspection PyArgumentList
+            database, _ = QtWidgets.QFileDialog.getOpenFileName()
+
+            # If a file was selected
+            if database != "":
+                with open_database(database) as cr:
+                    password_of_opened_db = password
+                    password, flag = password_box("Password", "Password:")
+                    if flag:
+                        if valid_password(cr, password):
+                            refresh_list_widget(
+                                cr, table, entry_date_list, entry_hint_list)
+                        else:
+                            msg_box("Invalid password!")
+                            password = password_of_opened_db
+                    else:
+                        password = password_of_opened_db
+
         def password_box(title, text):
             """
             Displays a QInputDialog that asks for a password
@@ -128,20 +374,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             psw, fl = QtWidgets.QInputDialog.getText(
                 self, title, text, QtWidgets.QLineEdit.Password)
             return psw, fl
-
-        def line_input(title, text):
-            """
-            Displays a QInputDialog to ask for user input
-
-            :param title: window title
-            :type title: str
-            :param text: text to be displayed
-            :type text: str
-            :return: user input
-            :rtype: str
-            """
-            # noinspection PyCallByClass
-            return QtWidgets.QInputDialog.getText(self, title, text)
 
         def refresh_list_widget(c, tb, edl, ehl):
             """
@@ -168,27 +400,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 edl.append(e)
                 ehl.append(h)
 
-        def open_new():
-            """Choose a file"""
-            nonlocal database, table, password, entry_date_list
-            nonlocal entry_hint_list
-            # noinspection PyArgumentList
-            database, _ = QtWidgets.QFileDialog.getOpenFileName()
-
-            if database != "":
-                with open_database(database) as cr:
-                    password_of_opened_db = password
-                    password, flag = password_box("Password", "Password:")
-                    if flag:
-                        if valid_password(cr, password):
-                            refresh_list_widget(
-                                cr, table, entry_date_list, entry_hint_list)
-                        else:
-                            msg_box("Invalid password!")
-                            password = password_of_opened_db
-                    else:
-                        password = password_of_opened_db
-
         def save_entry():
             """Save entry to the database"""
             nonlocal database, table, password, entry_date_list
@@ -207,71 +418,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 delete_entry(cr, table, date)
                 add_entry(cr, table, date, password, entry, hint)
 
-        def new_entry():
-            """Create new entry in the database"""
-            nonlocal database, table, password, entry_date_list
-            nonlocal entry_hint_list
-            if database == "":
-                return
-            del entry_date_list[:]
-            del entry_hint_list[:]
-            self.textEdit.setText("")
-            # noinspection PyCallByClass
-            hint, _ = line_input("Visible hint", "Visible hint:")
-            date = datetime()
-            self.listWidget.clear()
-            with open_database(database) as cr:
-                add_entry(cr, table, date, password, "", hint)
-                refresh_list_widget(
-                    cr, table, entry_date_list, entry_hint_list)
-            self.listWidget.setCurrentRow(0)
-
-        def delete():
-            """Delete an entry from the database"""
-            nonlocal database, table, password, entry_date_list
-            nonlocal entry_hint_list
-            if database == "":
-                return
-            if not self.listWidget.selectedIndexes():
-                return
-            select = confirm_box(
-                "Delete Entry",
-                "Do you want to delete entry?",
-                QtWidgets.QMessageBox.Yes,
-                QtWidgets.QMessageBox.Cancel)
-            if select == QtWidgets.QMessageBox.Yes:
-                index = self.listWidget.selectedIndexes()[0]
-                index = index.row()
-                date = entry_date_list[index]
-                self.listWidget.clear()
-                self.textEdit.setText("")
-                with open_database(database) as cr:
-                    delete_entry(cr, table, date)
-                    refresh_list_widget(
-                        cr, table, entry_date_list, entry_hint_list)
-
-        def delete_all():
-            """Delete database file and recreate an empty one"""
-            nonlocal database, table, password
-            if database == "":
-                return
-            select = confirm_box(
-                "Delete Database",
-                "Do you want to delete database?",
-                QtWidgets.QMessageBox.Yes,
-                QtWidgets.QMessageBox.Cancel)
-            if select == QtWidgets.QMessageBox.Yes:
-                select = confirm_box(
-                    "Delete Database",
-                    "Are you sure? This cannot be undone.",
-                    QtWidgets.QMessageBox.Yes,
-                    QtWidgets.QMessageBox.Cancel)
-                if select == QtWidgets.QMessageBox.Yes:
-                    os.remove(database)
-                    create_database(database, table, password)
-                    self.listWidget.clear()
-                    self.textEdit.setText("")
-
         def show_entry():
             """Display text belonging to selected entry"""
             nonlocal database, table, password, entry_date_list
@@ -285,83 +431,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 entry = single_entry(cr, table, date, password)
                 self.textEdit.setText(entry)
 
-        def open_browser_pyside2():
-            """Open the PySide2 project's page in the default web browser"""
-            webbrowser.open_new_tab("https://wiki.qt.io/PySide2")
+        def show_license_apache():
+            """Open a dialog window with the Apache 2 license"""
+            dialog = LicenseTextApache()
+            dialog.exec_()
 
-        def open_browser_d3ta():
-            """Open the D3TA project's page in the default web browser"""
-            webbrowser.open_new_tab("https://gitlab.com/KorvinSilver/d3ta")
-
-        def change_pass():
-            """Change password of database entries"""
-            nonlocal database, password, table
-            psw, flag = password_box("Change Password", "Current password:")
-            if flag:
-                if psw == password:
-                    new, flag = password_box("Change Password",
-                                             "New password:")
-                    if not flag:
-                        return
-                    confirm, flag = password_box("Change Password",
-                                                 "Confirm password:")
-                    if not flag:
-                        return
-                    if new == confirm:
-                        with open_database(database) as cr:
-                            change_password(cr, psw, new, table)
-                        msg_box("Password changed.")
-                        self.listWidget.clear()
-                        self.textEdit.setText("")
-                        database = ""
-                    else:
-                        msg_box("Passwords don't match!")
-                        return
-                else:
-                    msg_box("Invalid password!")
-                    return
-            else:
-                return
-
-        def confirm_exit():
-            """Display a confirm exit dialog"""
-            select = confirm_box(
-                "Exit",
-                "Are you sure you want to exit?",
-                QtWidgets.QMessageBox.Yes,
-                QtWidgets.QMessageBox.Cancel)
-            if select == QtWidgets.QMessageBox.Yes:
-                self.close()
-
-        def new_db():
-            """Create a new database"""
-            nonlocal table
-            # noinspection PyCallByClass
-            name = QtWidgets.QFileDialog.getSaveFileName(
-                self, "Save file", "", ".sqlite3")
-            name = "".join(name)
-            if name == "":
-                return
-            if os.path.isfile(name):
-                msg_box("File already exists!")
-                return
-            psw, flag = password_box("Password", "Password:")
-            if flag:
-                confirm, flag = password_box("Password", "Confirm password:")
-                if flag:
-                    if psw == confirm:
-                        try:
-                            create_database(name, table, "pass")
-                            msg_box(f"Database successfully created:\n{name}")
-                        except sqlite3.OperationalError:
-                            msg_box("Couldn't create new database!")
-                    else:
-                        msg_box("Passwords don't match!")
-                        return
-                else:
-                    return
-            else:
-                return
+        def show_license_lgpl():
+            """Open a dialog window with the LGPL3 license"""
+            dialog = LicenseTextLGPL()
+            dialog.exec_()
 
         # Connect buttons, menu items and QListWidget selection
         self.aboutD3TAAction.triggered.connect(open_browser_d3ta)
