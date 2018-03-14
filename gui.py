@@ -35,6 +35,7 @@ from d3lib.dbtools import (
     delete_entry,
     add_entry,
     create_database,
+    change_password
 )
 from PySide2 import QtCore, QtGui, QtWidgets
 
@@ -286,6 +287,35 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             """Open the D3TA project's page in the default web browser"""
             webbrowser.open_new_tab("https://gitlab.com/KorvinSilver/d3ta")
 
+        def change_pass():
+            nonlocal database, password, table
+            psw, flag = password_box("Change Password", "Current password:")
+            if flag:
+                if psw == password:
+                    new, flag = password_box("Change Password",
+                                             "New password:")
+                    if not flag:
+                        return
+                    confirm, flag = password_box("Change Password",
+                                                 "Confirm password:")
+                    if not flag:
+                        return
+                    if new == confirm:
+                        with open_database(database) as cr:
+                            change_password(cr, psw, new, table)
+                        msg_box("Password changed.")
+                        self.listWidget.clear()
+                        self.textEdit.setText("")
+                        database = ""
+                    else:
+                        msg_box("Passwords don't match!")
+                        return
+                else:
+                    msg_box("Invalid password!")
+                    return
+            else:
+                return
+
         # Connect buttons, menu items and QListWidget selection
         self.exitAction.triggered.connect(self.close)
         self.exitButton.clicked.connect(self.close)
@@ -302,6 +332,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.aboutD3TAAction.triggered.connect(open_browser_d3ta)
         self.aboutPySide2Action.triggered.connect(open_browser_pyside2)
         self.licenseAction.triggered.connect(show_license)
+
+        self.changePassAction.triggered.connect(change_pass)
 
         self.listWidget.itemSelectionChanged.connect(show_entry)
 
