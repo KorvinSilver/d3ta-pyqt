@@ -288,6 +288,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             webbrowser.open_new_tab("https://gitlab.com/KorvinSilver/d3ta")
 
         def change_pass():
+            """Change password of database entries"""
             nonlocal database, password, table
             psw, flag = password_box("Change Password", "Current password:")
             if flag:
@@ -316,9 +317,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             else:
                 return
 
+        def confirm_exit():
+            """Display a confirm exit dialog"""
+            select = confirm_box(
+                "Exit",
+                "Are you sure you want to exit?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.Cancel)
+            if select == QtWidgets.QMessageBox.Yes:
+                self.close()
+
         # Connect buttons, menu items and QListWidget selection
-        self.exitAction.triggered.connect(self.close)
-        self.exitButton.clicked.connect(self.close)
+        self.exitAction.triggered.connect(confirm_exit)
+        self.exitButton.clicked.connect(confirm_exit)
 
         self.openAction.triggered.connect(open_new)
         self.openButton.clicked.connect(open_new)
