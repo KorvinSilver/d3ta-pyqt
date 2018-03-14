@@ -43,7 +43,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
 __license__ = "Apache 2.0"
-__version__ = "0.1a"
+__version__ = "0.9"
 __email__ = "dev@korvin.eu"
 __status__ = "Development"
 
@@ -61,11 +61,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             QtGui.qApp.desktop().availableGeometry()))
 
         # Maximize window
-        # self.setWindowState(QtCore.Qt.WindowMaximized)
+        self.setWindowState(QtCore.Qt.WindowMaximized)
 
-        def show_license():
-            """Open a dialog window with the license"""
-            dialog = LicenseText()
+        def show_license_apache():
+            """Open a dialog window with the Apache 2 license"""
+            dialog = LicenseTextApache()
+            dialog.exec_()
+
+        def show_license_lgpl():
+            """Open a dialog window with the LGPL3 license"""
+            dialog = LicenseTextLGPL()
             dialog.exec_()
 
         entry_date_list = []
@@ -335,6 +340,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             name = QtWidgets.QFileDialog.getSaveFileName(
                 self, "Save file", "", ".sqlite3")
             name = "".join(name)
+            if name == "":
+                return
             if os.path.isfile(name):
                 msg_box("File already exists!")
                 return
@@ -357,36 +364,48 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 return
 
         # Connect buttons, menu items and QListWidget selection
+        self.aboutD3TAAction.triggered.connect(open_browser_d3ta)
+        self.aboutPySide2Action.triggered.connect(open_browser_pyside2)
+
+        self.changePassAction.triggered.connect(change_pass)
+
+        self.deleteAllButton.clicked.connect(delete_all)
+        self.deleteButton.clicked.connect(delete)
+
         self.exitAction.triggered.connect(confirm_exit)
         self.exitButton.clicked.connect(confirm_exit)
 
-        self.newButton.clicked.connect(new_db)
+        self.licenseAction.triggered.connect(show_license_apache)
+        self.licensePySide2Action.triggered.connect(show_license_lgpl)
+
         self.newAction.triggered.connect(new_db)
+        self.newButton.clicked.connect(new_db)
+
+        self.newEntryButton.clicked.connect(new_entry)
 
         self.openAction.triggered.connect(open_new)
         self.openButton.clicked.connect(open_new)
 
         self.saveButton.clicked.connect(save_entry)
-        self.newEntryButton.clicked.connect(new_entry)
-
-        self.deleteButton.clicked.connect(delete)
-        self.deleteAllButton.clicked.connect(delete_all)
-
-        self.aboutD3TAAction.triggered.connect(open_browser_d3ta)
-        self.aboutPySide2Action.triggered.connect(open_browser_pyside2)
-        self.licenseAction.triggered.connect(show_license)
-
-        self.changePassAction.triggered.connect(change_pass)
 
         self.listWidget.itemSelectionChanged.connect(show_entry)
 
 
-class LicenseText(QtWidgets.QDialog, Ui_Dialog):
+class LicenseTextApache(QtWidgets.QDialog, Ui_Dialog):
     def __init__(self):
-        super(LicenseText, self).__init__()
+        super(LicenseTextApache, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("License")
-        self.textBrowser.setText(license_text.html_text())
+        self.textBrowser.setText(license_text.html_apache())
+        self.okButton.clicked.connect(self.close)
+
+
+class LicenseTextLGPL(QtWidgets.QDialog, Ui_Dialog):
+    def __init__(self):
+        super(LicenseTextLGPL, self).__init__()
+        self.setupUi(self)
+        self.setWindowTitle("License")
+        self.textBrowser.setText(license_text.html_lgpl())
         self.okButton.clicked.connect(self.close)
 
 
