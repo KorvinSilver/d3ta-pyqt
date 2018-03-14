@@ -43,9 +43,9 @@ from PySide2 import QtCore, QtGui, QtWidgets
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
 __license__ = "Apache 2.0"
-__version__ = "0.9"
+__version__ = "1.0"
 __email__ = "dev@korvin.eu"
-__status__ = "Development"
+__status__ = "Production"
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -360,7 +360,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                             if valid_password(cr, password):
                                 # regenerate listWidget
                                 refresh_list_widget(
-                                    cr, table, entry_date_list, entry_hint_list)
+                                    cr,
+                                    table,
+                                    entry_date_list,
+                                    entry_hint_list)
                             # if invalid password
                             else:
                                 # display message and restore password
