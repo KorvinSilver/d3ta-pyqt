@@ -21,6 +21,7 @@ limitations under the License.
 
 import os
 import sys
+import webbrowser
 from cli import table_name
 from d3lib.cmenu import datetime
 from d3lib.gui import license_text
@@ -277,6 +278,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 entry = single_entry(cr, table, date, password)
                 self.textEdit.setText(entry)
 
+        def open_browser_pyside2():
+            """Open the PySide2 project's page in the default web browser"""
+            webbrowser.open_new_tab("https://wiki.qt.io/PySide2")
+
+        def open_browser_d3ta():
+            """Open the D3TA project's page in the default web browser"""
+            webbrowser.open_new_tab("https://gitlab.com/KorvinSilver/d3ta")
+
         # Connect buttons, menu items and QListWidget selection
         self.exitAction.triggered.connect(self.close)
         self.exitButton.clicked.connect(self.close)
@@ -290,6 +299,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.deleteButton.clicked.connect(delete)
         self.deleteAllButton.clicked.connect(delete_all)
 
+        self.aboutD3TAAction.triggered.connect(open_browser_d3ta)
+        self.aboutPySide2Action.triggered.connect(open_browser_pyside2)
         self.licenseAction.triggered.connect(show_license)
 
         self.listWidget.itemSelectionChanged.connect(show_entry)
