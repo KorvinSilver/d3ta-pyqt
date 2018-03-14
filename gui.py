@@ -71,37 +71,115 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         database = ""
         table = table_name()
 
-        # noinspection PyArgumentList
+        def msg_box(text):
+            """
+            Displays a QMessageBox with a given message
+            :param text: message
+            :type text: str
+            """
+            msg = QtWidgets.QMessageBox()
+            msg.setText(text)
+            msg.exec_()
+
+        def confirm_box(text, info_text, yes_button, no_button):
+            """
+            Displays a QMessageBox with buttons to confirm an action
+
+            :param text: text to be set
+            :type text: str
+            :param info_text: informative text to be set
+            :type info_text: str
+            :param yes_button: button object to be used to confirm action
+            :type yes_button: PySide2.QtWidgets.QMessageBox.StandardButton
+            :param no_button: button object to be used to cancel action
+            :type no_button: PySide2.QtWidgets.QMessageBox.StandardButton'
+            :return: selected button
+            :rtype: PySide2.QtWidgets.QMessageBox.StandardButton
+            """
+            dialog = QtWidgets.QMessageBox()
+            dialog.setText(text)
+            dialog.setInformativeText(info_text)
+            dialog.setStandardButtons(
+                yes_button | no_button)
+            select = dialog.exec_()
+            return select
+
+        def password_box(title, text):
+            """
+            Displays a QInputDialog that asks for a password
+
+            :param title: window title
+            :type title: str
+            :param text: text to be displayed
+            :type text: str
+            :return: password, and True or False depending on which button was
+                     pressed, Ok or Cancel
+            :rtype: str, bool
+            """
+            # noinspection PyCallByClass
+            psw, fl = QtWidgets.QInputDialog.getText(
+                self, title, text, QtWidgets.QLineEdit.Password)
+            return psw, fl
+
+        def line_input(title, text):
+            """
+            Displays a QInputDialog to ask for user input
+
+            :param title: window title
+            :type title: str
+            :param text: text to be displayed
+            :type text: str
+            :return: user input
+            :rtype: str
+            """
+            # noinspection PyCallByClass
+            return QtWidgets.QInputDialog.getText(self, title, text)
+
+        def refresh_list_widget(c, tb, edl, ehl):
+            """
+            Updates the QListWidget
+
+            :param c: sqlite3 Cursor instance
+            :type c: sqlite3 Cursor
+            :param tb: table name
+            :type tb: str
+            :param edl: entry date list
+            :type edl: list
+            :param ehl: entry hint list
+            :type ehl: list
+            """
+            del edl[:]
+            del ehl[:]
+            self.listWidget.clear()
+            self.textEdit.setText("")
+            for e, h in all_entry_names(c, tb):
+                if h != "":
+                    self.listWidget.addItem(f"{e} -- {h}")
+                else:
+                    self.listWidget.addItem(f"{e}")
+                edl.append(e)
+                ehl.append(h)
+
         def open_new():
             """Choose a file"""
             nonlocal database, table, password, entry_date_list
             nonlocal entry_hint_list
+            # noinspection PyArgumentList
             database, _ = QtWidgets.QFileDialog.getOpenFileName()
 
             if database != "":
                 with open_database(database) as cr:
-                    # noinspection PyCallByClass
-                    password, flag = QtWidgets.QInputDialog.getText(
-                        self,
-                        "Password",
-                        "Password:",
-                        QtWidgets.QLineEdit.Password)
+                    password_of_opened_db = password
+                    password, flag = password_box("Password", "Password:")
                     if flag:
-                        self.listWidget.clear()
-                        self.textEdit.setText("")
                         if valid_password(cr, password):
-                            for entry, hint in all_entry_names(cr, table):
-                                if hint != "":
-                                    self.listWidget.addItem(
-                                        f"{entry} -- {hint}")
-                                else:
-                                    self.listWidget.addItem(f"{entry}")
-                                entry_date_list.append(entry)
-                                entry_hint_list.append(hint)
+                            refresh_list_widget(
+                                cr, table, entry_date_list, entry_hint_list)
                         else:
-                            msg = QtWidgets.QMessageBox()
-                            msg.setText("Invalid password!")
-                            msg.exec_()
+                            msg_box("Invalid password!")
+                            password = password_of_opened_db
+                    else:
+                        password = password_of_opened_db
 
         def save_entry():
             """Save entry to the database"""
@@ -131,22 +209,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             del entry_hint_list[:]
             self.textEdit.setText("")
             # noinspection PyCallByClass
-            hint, _ = QtWidgets.QInputDialog.getText(
-                self,
-                "Visible hint",
-                "Visible hint:")
+            hint, _ = line_input("Visible hint", "Visible hint:")
             date = datetime()
             self.listWidget.clear()
             with open_database(database) as cr:
                 add_entry(cr, table, date, password, "", hint)
-                for entry, hint in all_entry_names(cr, table):
-                    if hint != "":
-                        self.listWidget.addItem(
-                            f"{entry} -- {hint}")
-                    else:
-                        self.listWidget.addItem(f"{entry}")
-                    entry_date_list.append(entry)
-                    entry_hint_list.append(hint)
+                refresh_list_widget(
+                    cr, table, entry_date_list, entry_hint_list)
             self.listWidget.setCurrentRow(0)
 
         def delete():
@@ -157,12 +226,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 return
             if not self.listWidget.selectedIndexes():
                 return
-            confirm = QtWidgets.QMessageBox()
-            confirm.setText("Delete Entry")
-            confirm.setInformativeText("Do you want to delete entry?")
-            confirm.setStandardButtons(
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-            select = confirm.exec_()
+            select = confirm_box(
+                "Delete Entry",
+                "Do you want to delete entry?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.Cancel)
             if select == QtWidgets.QMessageBox.Yes:
                 index = self.listWidget.selectedIndexes()[0]
                 index = index.row()
@@ -171,35 +239,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.textEdit.setText("")
                 with open_database(database) as cr:
                     delete_entry(cr, table, date)
-                    del entry_date_list[:]
-                    del entry_hint_list[:]
-                    for entry, hint in all_entry_names(cr, table):
-                        if hint != "":
-                            self.listWidget.addItem(
-                                f"{entry} -- {hint}")
-                        else:
-                            self.listWidget.addItem(f"{entry}")
-                        entry_date_list.append(entry)
-                        entry_hint_list.append(hint)
+                    refresh_list_widget(
+                        cr, table, entry_date_list, entry_hint_list)
 
         def delete_all():
+            """Delete database file and recreate an empty one"""
             nonlocal database, table, password
             if database == "":
                 return
-            confirm = QtWidgets.QMessageBox()
-            confirm.setText("Delete Database")
-            confirm.setInformativeText("Do you want to delete the database?")
-            confirm.setStandardButtons(
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-            select = confirm.exec_()
+            select = confirm_box(
+                "Delete Database",
+                "Do you want to delete database?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.Cancel)
             if select == QtWidgets.QMessageBox.Yes:
-                confirm = QtWidgets.QMessageBox()
-                confirm.setText("Delete Database")
-                confirm.setInformativeText(
-                    "Are you sure? This cannot be undone.")
-                confirm.setStandardButtons(
-                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-                select = confirm.exec_()
+                select = confirm_box(
+                    "Delete Database",
+                    "Are you sure? This cannot be undone.",
+                    QtWidgets.QMessageBox.Yes,
+                    QtWidgets.QMessageBox.Cancel)
                 if select == QtWidgets.QMessageBox.Yes:
                     os.remove(database)
                     create_database(database, table, password)
