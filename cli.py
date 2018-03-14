@@ -137,9 +137,13 @@ if __name__ == "__main__":
             else:
                 sys.exit("Invalid password.")
     # Open database
-    with open_database(database) as cr:
-        password = getpass.getpass()
-        if not valid_password(cr, password):
-            sys.exit("Invalid password.")
+    try:
+        with open_database(database) as cr:
+            password = getpass.getpass()
+            if not valid_password(cr, password):
+                sys.exit("Invalid password.")
 
-        run(cr, table, password)
+            run(cr, table, password)
+    except sqlite3.DatabaseError:
+        sys.exit(f"{database} is not a valid database or "
+                 f"you don't have the necessary permissions to open it.")
