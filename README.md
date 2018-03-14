@@ -29,7 +29,7 @@ The GUI uses [PySide2](https://wiki.qt.io/PySide2), and the main window and lice
 
 This project is licensed under the [Apache License version 2.0](https://www.apache.org/licenses/LICENSE-2.0).<br>
 PySide2 is licensed under the [GNU Lesser General Public License version 3](https://opensource.org/licenses/lgpl-3.0.html).<br>
-PyCrypto is licensed under [its own open source license](https://www.dlitz.net/software/pycrypto/submission-requirements/).<br>
+PyCrypto is licensed under [its own terms](https://www.dlitz.net/software/pycrypto/submission-requirements/).<br>
 bcrypt is licensed under the [Apache License version 2.0](https://www.apache.org/licenses/LICENSE-2.0).<br>
 
 ### Command line usage:
