@@ -47,17 +47,11 @@ def open_database(db):
     """
     conn = sqlite3.connect(db)
     c = conn.cursor()
-    try:
-        # Try to fetch something to see if sqlite3.DatabaseError gets raised
-        c.fetchone()
-        yield c
-    except sqlite3.DatabaseError:
-        sys.exit(f"'{db}' is not a database or you don't have the necessary "
-                 f"permissions.")
-    finally:
-        conn.commit()
-        c.close()
-        conn.close()
+    c.fetchone()
+    yield c
+    conn.commit()
+    c.close()
+    conn.close()
 
 
 def create_main_table(c, tb):
