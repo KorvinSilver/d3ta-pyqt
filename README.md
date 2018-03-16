@@ -47,7 +47,55 @@ optional arguments:
   --change-password
 ```
 
-Note: urwid has mouse support, so mouse clickes are registered.
+Note: urwid has mouse support, so mouse clicks are registered.
+
+### GUI usage:
+**Menu items:**
++ File | New Diary
+  + create new diary
+  + keyboard shortcut: Ctrl+N
++ File | Open Diary
+  + open diary
+  + keyboard shortcut: Ctrl+O
++ File | New Entry
+  + create new entry in diary
+  + keyboard shortcut: F2
++ File | Save
+  + save selected entry
+  + keyboard shortcut: Ctrl+S
++ File | Delete
+  + delete selected entry
+  + keyboard shortcut: Ctrl+Del
++ File | Change Password
+  + change diary password
+  + keyboard shortcut: Ctrl+F8
++ File | Exit
+  + quit program
+  + keyboard shortcut: Ctrl+Q
++ Help | License D3TA
+  + show D3TA license
++ Help | About D3TA
+  + open D3TA website
++ Help | License PySide2
+  + show PySide2 license
++ Help | About PySide2
+  + open PySide2 website
+
+**Buttons:**
++ New
+  + create new diary
++ Open
+  + open diary
++ Delete
+  + delete selected entry
++ Delete All
+  + delete all entries
++ New Entry
+  + create new entry in diary
++ Save
+  + save selected entry
++ Close
+  + quit program
 
 ### CLI Screenshots
 <img src="screenshots/c1.png" alt="CLI screenshot 1"> <img src="screenshots/c2.png" alt="CLI screenshot 2"><br>
