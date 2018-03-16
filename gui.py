@@ -19,6 +19,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import hashlib
 import os
 import shutil
 import sqlite3
@@ -47,6 +48,11 @@ __license__ = "Apache 2.0"
 __version__ = "1.0"
 __email__ = "dev@korvin.eu"
 __status__ = "Production"
+
+# Declare variables with different initial values
+# These will store hash sums of the db file and the backup db file
+db_hash = "+"
+bak_hash = "-"
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -80,6 +86,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         def change_pass():
             """Change password of database entries"""
+            global db_hash, bak_hash
             nonlocal database, password, table
 
             # Don't do anything if there's no database open
@@ -110,7 +117,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         # backup database
                         backup = BackupMessageBox(database)
                         backup.exec_()
-                        msg_box("Backup file " + database + ".bak created")
+                        if db_hash == bak_hash:
+                            msg_box("Backup file " + database + ".bak created")
+                        else:
+                            msg_box("Something went wrong! "
+                                    "Password didn't change!")
+                            return
+
                         # change password
                         change = PasswordChangeMessageBox(
                             database, table, password, new
@@ -541,8 +554,37 @@ class BackingUp(QtCore.QThread):
         self.file = file
 
     def run(self):
+        global db_hash
+        global bak_hash
+
+        def make_hash(file):
+            """
+            Creates an SHA3-256 sum from a file
+
+            :param file: file to be hashed
+            :type file: str
+            :return: hexadecimal hash string
+            :rtype: str
+            """
+            h = hashlib.sha3_256()
+            with open(file, "rb") as f:
+                while True:
+                    data = f.read(65536)
+                    if not data:
+                        break
+                    h.update(data)
+            return h.hexdigest()
+
+        # hash database
+        db_hash = make_hash(self.file)
         # create backup
-        shutil.copyfile(self.file, self.file + ".bak")
+        # noinspection PyBroadException
+        try:
+            shutil.copyfile(self.file, self.file + ".bak")
+            # hash backup file
+            bak_hash = make_hash(self.file + ".bak")
+        except Exception:
+            pass
         # send a signal when it's done
         # noinspection PyUnresolvedReferences
         self.sig.emit()
