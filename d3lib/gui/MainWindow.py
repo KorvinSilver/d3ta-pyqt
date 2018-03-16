@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Mar 14 20:15:35 2018
+# Created: Fri Mar 16 23:52:46 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -15,7 +15,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         MainWindow.setMinimumSize(QtCore.QSize(800, 600))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("d3lib/gui/icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -108,8 +108,18 @@ class Ui_MainWindow(object):
         self.changePassAction.setObjectName("changePassAction")
         self.licensePySide2Action = QtWidgets.QAction(MainWindow)
         self.licensePySide2Action.setObjectName("licensePySide2Action")
+        self.newEntryAction = QtWidgets.QAction(MainWindow)
+        self.newEntryAction.setObjectName("newEntryAction")
+        self.saveAction = QtWidgets.QAction(MainWindow)
+        self.saveAction.setObjectName("saveAction")
+        self.deleteAction = QtWidgets.QAction(MainWindow)
+        self.deleteAction.setObjectName("deleteAction")
         self.menuFile.addAction(self.newAction)
         self.menuFile.addAction(self.openAction)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.newEntryAction)
+        self.menuFile.addAction(self.saveAction)
+        self.menuFile.addAction(self.deleteAction)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.changePassAction)
         self.menuFile.addSeparator()
@@ -132,16 +142,26 @@ class Ui_MainWindow(object):
         self.openButton.setText(QtWidgets.QApplication.translate("MainWindow", "Open", None, -1))
         self.newEntryButton.setText(QtWidgets.QApplication.translate("MainWindow", "New Entry", None, -1))
         self.deleteButton.setText(QtWidgets.QApplication.translate("MainWindow", "Delete", None, -1))
-        self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "Fi&le", None, -1))
-        self.menuHelp.setTitle(QtWidgets.QApplication.translate("MainWindow", "Help", None, -1))
-        self.newAction.setText(QtWidgets.QApplication.translate("MainWindow", "&New Diary", None, -1))
+        self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "&File", None, -1))
+        self.menuHelp.setTitle(QtWidgets.QApplication.translate("MainWindow", "&Help", None, -1))
+        self.newAction.setText(QtWidgets.QApplication.translate("MainWindow", "New &Diary", None, -1))
+        self.newAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+N", None, -1))
         self.openAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Open Diary", None, -1))
+        self.openAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+O", None, -1))
         self.exitAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Exit", None, -1))
+        self.exitAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+Q", None, -1))
         self.aboutD3TAAction.setText(QtWidgets.QApplication.translate("MainWindow", "&About D3TA", None, -1))
-        self.aboutPySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "&About PySide2", None, -1))
+        self.aboutPySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "A&bout PySide2", None, -1))
         self.actionD3TA_License.setText(QtWidgets.QApplication.translate("MainWindow", "D3TA License", None, -1))
         self.actionPySide2_License.setText(QtWidgets.QApplication.translate("MainWindow", "PySide2 License", None, -1))
         self.licenseAction.setText(QtWidgets.QApplication.translate("MainWindow", "&License D3TA", None, -1))
         self.changePassAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Change Password", None, -1))
-        self.licensePySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "&License PySide2", None, -1))
+        self.changePassAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+F8", None, -1))
+        self.licensePySide2Action.setText(QtWidgets.QApplication.translate("MainWindow", "License &PySide2", None, -1))
+        self.newEntryAction.setText(QtWidgets.QApplication.translate("MainWindow", "&New Entry", None, -1))
+        self.newEntryAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "F2", None, -1))
+        self.saveAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Save", None, -1))
+        self.saveAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+S", None, -1))
+        self.deleteAction.setText(QtWidgets.QApplication.translate("MainWindow", "&Delete", None, -1))
+        self.deleteAction.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+Del", None, -1))
 

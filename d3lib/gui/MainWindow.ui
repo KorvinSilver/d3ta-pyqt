@@ -150,10 +150,14 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>Fi&amp;le</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="newAction"/>
     <addaction name="openAction"/>
+    <addaction name="separator"/>
+    <addaction name="newEntryAction"/>
+    <addaction name="saveAction"/>
+    <addaction name="deleteAction"/>
     <addaction name="separator"/>
     <addaction name="changePassAction"/>
     <addaction name="separator"/>
@@ -161,7 +165,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="licenseAction"/>
     <addaction name="aboutD3TAAction"/>
@@ -174,17 +178,26 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="newAction">
    <property name="text">
-    <string>&amp;New Diary</string>
+    <string>New &amp;Diary</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="openAction">
    <property name="text">
     <string>&amp;Open Diary</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="exitAction">
    <property name="text">
     <string>&amp;Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="aboutD3TAAction">
@@ -194,7 +207,7 @@
   </action>
   <action name="aboutPySide2Action">
    <property name="text">
-    <string>&amp;About PySide2</string>
+    <string>A&amp;bout PySide2</string>
    </property>
   </action>
   <action name="actionD3TA_License">
@@ -216,10 +229,37 @@
    <property name="text">
     <string>&amp;Change Password</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+F8</string>
+   </property>
   </action>
   <action name="licensePySide2Action">
    <property name="text">
-    <string>&amp;License PySide2</string>
+    <string>License &amp;PySide2</string>
+   </property>
+  </action>
+  <action name="newEntryAction">
+   <property name="text">
+    <string>&amp;New Entry</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="saveAction">
+   <property name="text">
+    <string>&amp;Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="deleteAction">
+   <property name="text">
+    <string>&amp;Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Del</string>
    </property>
   </action>
  </widget>
