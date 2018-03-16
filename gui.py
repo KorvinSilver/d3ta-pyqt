@@ -506,6 +506,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.changePassAction.triggered.connect(change_pass)
 
         self.deleteAllButton.clicked.connect(delete_all)
+        self.deleteAction.triggered.connect(delete)
         self.deleteButton.clicked.connect(delete)
 
         self.exitAction.triggered.connect(confirm_exit)
@@ -517,11 +518,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.newAction.triggered.connect(new_db)
         self.newButton.clicked.connect(new_db)
 
+        self.newEntryAction.triggered.connect(new_entry)
         self.newEntryButton.clicked.connect(new_entry)
 
         self.openAction.triggered.connect(open_new)
         self.openButton.clicked.connect(open_new)
 
+        self.saveAction.triggered.connect(save_entry)
         self.saveButton.clicked.connect(save_entry)
 
         self.listWidget.itemSelectionChanged.connect(show_entry)
