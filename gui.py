@@ -20,6 +20,7 @@ limitations under the License.
 """
 
 import os
+import shutil
 import sqlite3
 import sys
 import webbrowser
@@ -106,9 +107,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         return
                     # if new passwords match
                     if new == confirm:
+                        # backup database
+                        backup = BackupMessageBox(database)
+                        backup.exec_()
+                        msg_box("Backup file " + database + ".bak created")
                         # change password
-                        with open_database(database) as cr:
-                            change_password(cr, psw, new, table)
+                        change = PasswordChangeMessageBox(
+                            database, table, password, new
+                        )
+                        change.exec_()
                         # display message of successful change
                         msg_box("Password changed.")
                         # clear listWidget and textEdit
@@ -523,6 +530,70 @@ class LicenseTextLGPL(QtWidgets.QDialog, Ui_Dialog):
         self.setWindowTitle("License")
         self.textBrowser.setText(license_text.html_lgpl())
         self.okButton.clicked.connect(self.close)
+
+
+class BackingUp(QtCore.QThread):
+    """Executes the copying of the database on a new thread"""
+    sig = QtCore.Signal()
+
+    def __init__(self, file):
+        super(BackingUp, self).__init__()
+        self.file = file
+
+    def run(self):
+        # create backup
+        shutil.copyfile(self.file, self.file + ".bak")
+        # send a signal when it's done
+        # noinspection PyUnresolvedReferences
+        self.sig.emit()
+
+
+class BackupMessageBox(QtWidgets.QMessageBox):
+    """Displays a QMessageBox while the database is being copied"""
+    def __init__(self, file):
+        super(BackupMessageBox, self).__init__()
+        self.file = file
+        self.setText("Backing up database. This might take a while...")
+        # disable buttons
+        self.setStandardButtons(0)
+        self.backup = BackingUp(self.file)
+        self.backup.start()
+        # for some reason self.close doesn't work
+        # noinspection PyUnresolvedReferences
+        self.backup.sig.connect(self.reject)
+
+
+class ChangingPassword(QtCore.QThread):
+    """Executes the password change of the database on a new thread"""
+    sig = QtCore.Signal()
+
+    def __init__(self, file, table, old_pass, new_pass):
+        super(ChangingPassword, self).__init__()
+        self.file = file
+        self.table = table
+        self.old_pass = old_pass
+        self.new_pass = new_pass
+
+    def run(self):
+        with open_database(self.file) as cr:
+            change_password(cr, self.old_pass, self.new_pass, self.table)
+        # send signal when it's done
+        # noinspection PyUnresolvedReferences
+        self.sig.emit()
+
+
+class PasswordChangeMessageBox(QtWidgets.QMessageBox):
+    """Displays a QMessageBox while the password change is running"""
+    def __init__(self, file, table, old_pass, new_pass):
+        super(PasswordChangeMessageBox, self).__init__()
+        self.setText("Changing password. This might take a while...")
+        # disable buttons
+        self.setStandardButtons(0)
+        self.pass_change = ChangingPassword(file, table, old_pass, new_pass)
+        self.pass_change.start()
+        # for some reason self.close doesn't work
+        # noinspection PyUnresolvedReferences
+        self.pass_change.sig.connect(self.reject)
 
 
 if __name__ == "__main__":
