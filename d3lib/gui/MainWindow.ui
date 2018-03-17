@@ -169,7 +169,6 @@
     </property>
     <addaction name="licenseAction"/>
     <addaction name="aboutD3TAAction"/>
-    <addaction name="licensePySide2Action"/>
     <addaction name="aboutPySide2Action"/>
    </widget>
    <addaction name="menuFile"/>
@@ -178,7 +177,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="newAction">
    <property name="text">
-    <string>New &amp;Diary</string>
+    <string>Ne&amp;w Diary</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -207,7 +206,7 @@
   </action>
   <action name="aboutPySide2Action">
    <property name="text">
-    <string>A&amp;bout PySide2</string>
+    <string>A&amp;bout Qt5</string>
    </property>
   </action>
   <action name="actionD3TA_License">
@@ -222,7 +221,7 @@
   </action>
   <action name="licenseAction">
    <property name="text">
-    <string>&amp;License D3TA</string>
+    <string>&amp;License</string>
    </property>
   </action>
   <action name="changePassAction">
