@@ -350,7 +350,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         def open_browser_d3ta():
             """Open the D3TA project's page in the default web browser"""
             webbrowser.open_new_tab(
-                "https://gitlab.com/KorvinSilver/d3ta-pyqt5")
+                "https://gitlab.com/KorvinSilver/d3ta-pyqt")
 
         def open_browser_qt5():
             """Open the Qt5 project's doc page in the default web browser"""
