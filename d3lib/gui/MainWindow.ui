@@ -169,7 +169,7 @@
     </property>
     <addaction name="licenseAction"/>
     <addaction name="aboutD3TAAction"/>
-    <addaction name="aboutPySide2Action"/>
+    <addaction name="aboutQt5Action"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -204,7 +204,7 @@
     <string>&amp;About D3TA</string>
    </property>
   </action>
-  <action name="aboutPySide2Action">
+  <action name="aboutQt5Action">
    <property name="text">
     <string>A&amp;bout Qt5</string>
    </property>
