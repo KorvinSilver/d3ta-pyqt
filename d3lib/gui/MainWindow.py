@@ -14,7 +14,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         MainWindow.setMinimumSize(QtCore.QSize(800, 600))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("d3lib/gui/icon.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
