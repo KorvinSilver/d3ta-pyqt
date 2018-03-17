@@ -40,7 +40,7 @@ from d3lib.dbtools import (
 from d3lib.gui import license_text
 from d3lib.gui.AboutDialog import Ui_Dialog
 from d3lib.gui.MainWindow import Ui_MainWindow
-from PySide2 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
@@ -55,20 +55,20 @@ db_hash = "+"
 bak_hash = "-"
 
 
+# noinspection PyArgumentList
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
         # Center window
-        self.setGeometry(QtWidgets.QStyle.alignedRect(
-            QtCore.Qt.LeftToRight,
-            QtCore.Qt.AlignCenter,
-            self.size(),
-            QtGui.qApp.desktop().availableGeometry()))
+        rectangle = self.frameGeometry()
+        center_point = QtWidgets.QDesktopWidget().availableGeometry().center()
+        rectangle.moveCenter(center_point)
+        self.move(rectangle.topLeft())
 
         # Maximize window
-        self.setWindowState(QtCore.Qt.WindowMaximized)
+        # self.setWindowState(QtCore.Qt.WindowMaximized)
 
         # Declare variables to hold information
         # title of each entry - date
@@ -257,7 +257,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             :return: user input
             :rtype: str
             """
-            # noinspection PyCallByClass
+            # noinspection PyCallByClass,PyArgumentList
             return QtWidgets.QInputDialog.getText(self, title, text)
 
         def msg_box(text):
@@ -334,7 +334,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.listWidget.clear()
             self.textEdit.setText("")
             # Ask for visible hint, don't check if Ok or Cancel was pressed
-            # noinspection PyCallByClass
             hint, _ = line_input("Visible hint", "Visible hint:")
             # Get formatted date from d3lib.cmenu.py
             date = datetime()
@@ -362,7 +361,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             # Ask user to select a file,
             # don't check if Open or Cancel was pressed
-            # noinspection PyArgumentList
             database, _ = QtWidgets.QFileDialog.getOpenFileName()
 
             # If a file was selected
@@ -550,7 +548,7 @@ class LicenseTextLGPL(QtWidgets.QDialog, Ui_Dialog):
 
 class BackingUp(QtCore.QThread):
     """Executes the copying of the database on a new thread"""
-    sig = QtCore.Signal()
+    sig = QtCore.pyqtSignal()
 
     def __init__(self, file):
         super(BackingUp, self).__init__()
@@ -589,7 +587,6 @@ class BackingUp(QtCore.QThread):
         except Exception:
             pass
         # send a signal when it's done
-        # noinspection PyUnresolvedReferences
         self.sig.emit()
 
 
@@ -604,13 +601,12 @@ class BackupMessageBox(QtWidgets.QMessageBox):
         self.backup = BackingUp(self.file)
         self.backup.start()
         # for some reason self.close doesn't work
-        # noinspection PyUnresolvedReferences
         self.backup.sig.connect(self.reject)
 
 
 class ChangingPassword(QtCore.QThread):
     """Executes the password change of the database on a new thread"""
-    sig = QtCore.Signal()
+    sig = QtCore.pyqtSignal()
 
     def __init__(self, file, table, old_pass, new_pass):
         super(ChangingPassword, self).__init__()
@@ -623,7 +619,6 @@ class ChangingPassword(QtCore.QThread):
         with open_database(self.file) as cr:
             change_password(cr, self.old_pass, self.new_pass, self.table)
         # send signal when it's done
-        # noinspection PyUnresolvedReferences
         self.sig.emit()
 
 
@@ -637,7 +632,6 @@ class PasswordChangeMessageBox(QtWidgets.QMessageBox):
         self.pass_change = ChangingPassword(file, table, old_pass, new_pass)
         self.pass_change.start()
         # for some reason self.close doesn't work
-        # noinspection PyUnresolvedReferences
         self.pass_change.sig.connect(self.reject)
 
 
