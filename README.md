@@ -43,6 +43,7 @@ positional arguments:
 
 optional arguments:
   -h, --help         show this help message and exit
+  -l, --license      show license boilerplate
   --new-database
   --change-password
 ```
