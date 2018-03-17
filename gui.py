@@ -4,19 +4,20 @@
 """
 Project: D3TA (Dear Diary, Don't Tell Anyone)
 
-Copyright 2018, Korvin F. Ezüst
+Copyright (C) 2018  Korvin F. Ezüst
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-  http://www.apache.org/licenses/LICENSE-2.0
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import hashlib
@@ -44,8 +45,8 @@ from PyQt5 import QtCore, QtWidgets
 
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
-__license__ = "Apache 2.0"
-__version__ = "1.0"
+__license__ = "GNU General Public License version 3"
+__version__ = "1.0.1"
 __email__ = "dev@korvin.eu"
 __status__ = "Production"
 
@@ -348,11 +349,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         def open_browser_d3ta():
             """Open the D3TA project's page in the default web browser"""
-            webbrowser.open_new_tab("https://gitlab.com/KorvinSilver/d3ta")
+            webbrowser.open_new_tab(
+                "https://gitlab.com/KorvinSilver/d3ta-pyqt5")
 
-        def open_browser_pyside2():
-            """Open the PySide2 project's page in the default web browser"""
-            webbrowser.open_new_tab("https://wiki.qt.io/PySide2")
+        def open_browser_qt5():
+            """Open the Qt5 project's doc page in the default web browser"""
+            webbrowser.open_new_tab("https://doc.qt.io/qt-5/qt5-intro.html")
 
         def open_new():
             """Choose a file"""
@@ -487,19 +489,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 entry = single_entry(cr, table, date, password)
                 self.textEdit.setText(entry)
 
-        def show_license_apache():
+        def show_license():
             """Open a dialog window with the Apache 2 license"""
-            dialog = LicenseTextApache()
-            dialog.exec_()
-
-        def show_license_lgpl():
-            """Open a dialog window with the LGPL3 license"""
-            dialog = LicenseTextLGPL()
+            dialog = LicenseText()
             dialog.exec_()
 
         # Connect buttons, menu items and QListWidget selection
         self.aboutD3TAAction.triggered.connect(open_browser_d3ta)
-        self.aboutPySide2Action.triggered.connect(open_browser_pyside2)
+        self.aboutQt5Action.triggered.connect(open_browser_qt5)
 
         self.changePassAction.triggered.connect(change_pass)
 
@@ -510,8 +507,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.exitAction.triggered.connect(confirm_exit)
         self.exitButton.clicked.connect(confirm_exit)
 
-        self.licenseAction.triggered.connect(show_license_apache)
-        self.licensePySide2Action.triggered.connect(show_license_lgpl)
+        self.licenseAction.triggered.connect(show_license)
 
         self.newAction.triggered.connect(new_db)
         self.newButton.clicked.connect(new_db)
@@ -528,21 +524,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.listWidget.itemSelectionChanged.connect(show_entry)
 
 
-class LicenseTextApache(QtWidgets.QDialog, Ui_Dialog):
+class LicenseText(QtWidgets.QDialog, Ui_Dialog):
     def __init__(self):
-        super(LicenseTextApache, self).__init__()
+        super(LicenseText, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("License")
-        self.textBrowser.setText(license_text.html_apache())
-        self.okButton.clicked.connect(self.close)
-
-
-class LicenseTextLGPL(QtWidgets.QDialog, Ui_Dialog):
-    def __init__(self):
-        super(LicenseTextLGPL, self).__init__()
-        self.setupUi(self)
-        self.setWindowTitle("License")
-        self.textBrowser.setText(license_text.html_lgpl())
+        self.textBrowser.setText(license_text.html_gpl())
         self.okButton.clicked.connect(self.close)
 
 

@@ -4,19 +4,20 @@
 """
 Project: D3TA (Dear Diary, Don't Tell Anyone)
 
-Copyright 2018, Korvin F. Ezüst
+Copyright (C) 2018  Korvin F. Ezüst
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-  http://www.apache.org/licenses/LICENSE-2.0
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import argparse
@@ -34,10 +35,10 @@ from d3lib.dbtools import (
 
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
-__license__ = "Apache 2.0"
-__version__ = "0.9"
+__license__ = "GNU General Public License version 3"
+__version__ = "1.0"
 __email__ = "dev@korvin.eu"
-__status__ = "Development"
+__status__ = "Production"
 
 
 def table_name():
@@ -66,9 +67,12 @@ if __name__ == "__main__":
     # Set usage message
     message = f"%(prog)s [-h] [{cp} | {nd}] {base}"
     parser = argparse.ArgumentParser(usage=message, description=program_name)
-    parser.add_argument(base, help=f"[path +] filename to your {base}")
+    parser.add_argument(base, help=f"[path +] filename to your {base}",
+                        nargs="?")
 
     # Set custom attribute names for optional arguments
+    parser.add_argument("-l", "--license", action="store_true",
+                        help="show license boilerplate")
     parser.add_argument(nd, action="store_true", dest="new_database")
     parser.add_argument(cp, action="store_true", dest="change_pass")
     args = parser.parse_args()
@@ -76,6 +80,15 @@ if __name__ == "__main__":
     # Get positional argument's attribute with getattr() because it cannot be
     # set with dest
     database = getattr(args, base)
+
+    # Show license and exit
+    if args.license:
+        sys.exit(__doc__)
+
+    if database is None:
+        parser.print_usage()
+        sys.exit(f"{__file__}: error: "
+                 f"the following arguments are required: database")
 
     # Exit if both optional arguments are present
     if args.new_database and args.change_pass:
