@@ -29,11 +29,11 @@ import urwid
 
 __authors__ = ["Ian Ward", "Korvin F. Ezüst"]
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
-__license__ = "GNU Lesser General Public License 3.0"
+__license__ = "GNU Lesser General Public License version 3"
 __version__ = "1.0"
 __maintainer__ = "Korvin F. Ezüst"
 __email__ = "dev@korvin.eu"
-__status__ = "Working"
+__status__ = "Production"
 
 new_text = ""
 
