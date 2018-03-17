@@ -69,7 +69,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.move(rectangle.topLeft())
 
         # Maximize window
-        # self.setWindowState(QtCore.Qt.WindowMaximized)
+        self.setWindowState(QtCore.Qt.WindowMaximized)
 
         # Declare variables to hold information
         # title of each entry - date
