@@ -9,7 +9,7 @@ Requirements:
 + bcrypt
 + pycrypto
 + urwid 2.x
-+ pyside2
++ pyqt5
 
 The program stores the data in a SQLite3 database file. It may have any name and extension you provide, although I'd recommend using the .sqlite3 extension.
 The GUI actually saves each new file with it.
@@ -25,10 +25,10 @@ A salted hash generated from the password using [bcrypt](https://github.com/pyca
 The program allows you to create new databases, change their passwords, create new entries, save and modify entries, delete entries and empty databases.
 These functions are accessible both from the command line and from the GUI.
 
-The CLI uses [urwid](http://urwid.org/index.html), the GUI uses [PySide2](https://wiki.qt.io/PySide2), and the main window and license windows were created with [Qt Designer](https://doc.qt.io/qt-5/qtdesigner-manual.html).
+The CLI uses [urwid](http://urwid.org/index.html), the GUI uses [PyQt5](https://doc.qt.io/qt-5/qt5-intro.html), and the main window and license windows were created with [Qt Designer](https://doc.qt.io/qt-5/qtdesigner-manual.html).
 
-This project is licensed under the [Apache License version 2.0](https://www.apache.org/licenses/LICENSE-2.0).<br>
-PySide2 is licensed under the [GNU Lesser General Public License version 3](https://opensource.org/licenses/lgpl-3.0.html).<br>
+This project is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl.html).<br>
+PyQt5 is licensed under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl.html).<br>
 PyCrypto is licensed under [its own terms](https://www.dlitz.net/software/pycrypto/submission-requirements/).<br>
 bcrypt is licensed under the [Apache License version 2.0](https://www.apache.org/licenses/LICENSE-2.0).<br>
 
@@ -72,14 +72,12 @@ Note: urwid has mouse support, so mouse clicks are registered.
 + File | Exit
   + quit program
   + keyboard shortcut: Ctrl+Q
-+ Help | License D3TA
++ Help | License
   + show D3TA license
 + Help | About D3TA
   + open D3TA website
-+ Help | License PySide2
-  + show PySide2 license
-+ Help | About PySide2
-  + open PySide2 website
++ Help | About PyQt5
+  + open PyQt5 documentation website
 
 **Buttons:**
 + New
