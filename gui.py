@@ -584,7 +584,7 @@ class BackupMessageBox(QtWidgets.QMessageBox):
         self.file = file
         self.setText("Backing up database. This might take a while...")
         # disable buttons
-        self.setStandardButtons(0)
+        self.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         self.backup = BackingUp(self.file)
         self.backup.start()
         # for some reason self.close doesn't work
@@ -615,7 +615,7 @@ class PasswordChangeMessageBox(QtWidgets.QMessageBox):
         super(PasswordChangeMessageBox, self).__init__()
         self.setText("Changing password. This might take a while...")
         # disable buttons
-        self.setStandardButtons(0)
+        self.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         self.pass_change = ChangingPassword(file, table, old_pass, new_pass)
         self.pass_change.start()
         # for some reason self.close doesn't work
